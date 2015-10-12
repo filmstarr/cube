@@ -12,8 +12,9 @@ import SceneKit
 import Darwin
 
 class GameViewController: UIViewController {
-
+    
     let π = M_PI
+    var cubeObject:cube?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -27,13 +28,18 @@ class GameViewController: UIViewController {
         scene.rootNode.addChildNode(cameraNode)
         
         // place the camera
-        cameraNode.position = SCNVector3(x: 0, y: 0, z: 10)
+        let cameraHeight:Float = 10.0
+        let cameraAngle = π/6
+        cameraNode.position = SCNVector3(x: 0.0, y: cameraHeight, z: cameraHeight * Float(tan(cameraAngle)))
+        let xAxis = SCNVector3.init(x: 1, y: 0, z: 0)
+        cameraNode.runAction(SCNAction.rotateByAngle(CGFloat(cameraAngle-π/2), aroundAxis: xAxis, duration: 0.0))
         
         // create and add a light to the scene
         let lightNode = SCNNode()
         lightNode.light = SCNLight()
-        lightNode.light!.type = SCNLightTypeOmni
-        lightNode.position = SCNVector3(x: 0, y: 0, z: 30)
+        lightNode.light!.type = SCNLightTypeDirectional
+        lightNode.runAction(SCNAction.rotateByAngle(CGFloat(-π/2), aroundAxis: xAxis, duration: 0.0))
+        lightNode.position = SCNVector3(x: 0, y: 30, z: 0)
         scene.rootNode.addChildNode(lightNode)
         
         // create and add an ambient light to the scene
@@ -55,49 +61,32 @@ class GameViewController: UIViewController {
         // configure the view
         scnView.backgroundColor = UIColor.whiteColor()
         
+        let cubeNode = scene.rootNode.childNodeWithName("cube", recursively: true)
+        
+        cubeObject = cube(cubeNode: cubeNode!, cameraNode: cameraNode)
+        
         let swipeRight = UISwipeGestureRecognizer(target: self, action: "handleSwipe:")
-        swipeRight.direction = UISwipeGestureRecognizerDirection.Right
+        swipeRight.direction = .Right
         scnView.addGestureRecognizer(swipeRight)
 
         let swipeLeft = UISwipeGestureRecognizer(target: self, action: "handleSwipe:")
-        swipeLeft.direction = UISwipeGestureRecognizerDirection.Left
+        swipeLeft.direction = .Left
         scnView.addGestureRecognizer(swipeLeft)
 
         let swipeUp = UISwipeGestureRecognizer(target: self, action: "handleSwipe:")
-        swipeUp.direction = UISwipeGestureRecognizerDirection.Up
+        swipeUp.direction = .Up
         scnView.addGestureRecognizer(swipeUp)
 
         let swipeDown = UISwipeGestureRecognizer(target: self, action: "handleSwipe:")
-        swipeDown.direction = UISwipeGestureRecognizerDirection.Down
+        swipeDown.direction = .Down
         scnView.addGestureRecognizer(swipeDown)
-}
+    }
     
     func handleSwipe(gestureRecognize: UIGestureRecognizer) {
-        
-        let scnView = self.view as! SCNView
-        let cube = scnView.scene!.rootNode.childNodeWithName("cube", recursively: true)!
-
-        let animationDuration = 0.25
-        let yAxis = SCNVector3.init(x: 0, y: 1, z: 0)
-        let xAxis = SCNVector3.init(x: 1, y: 0, z: 0)
+        NSLog("handle swipe")
         
         if let swipeGesture = gestureRecognize as? UISwipeGestureRecognizer {
-            switch swipeGesture.direction {
-            case UISwipeGestureRecognizerDirection.Right:
-                cube.runAction(SCNAction.rotateByAngle(CGFloat(π/2), aroundAxis: yAxis, duration: animationDuration))
-                cube.runAction(SCNAction.moveByX(1, y: 0, z: 0, duration: animationDuration))
-            case UISwipeGestureRecognizerDirection.Left:
-                cube.runAction(SCNAction.rotateByAngle(CGFloat(-π/2), aroundAxis: yAxis, duration: animationDuration))
-                cube.runAction(SCNAction.moveByX(-1, y: 0, z: 0, duration: animationDuration))
-            case UISwipeGestureRecognizerDirection.Up:
-                cube.runAction(SCNAction.rotateByAngle(CGFloat(-π/2), aroundAxis: xAxis, duration: animationDuration))
-                cube.runAction(SCNAction.moveByX(0, y: 1, z: 0, duration: animationDuration))
-            case UISwipeGestureRecognizerDirection.Down:
-                cube.runAction(SCNAction.rotateByAngle(CGFloat(π/2), aroundAxis: xAxis, duration: animationDuration))
-                cube.runAction(SCNAction.moveByX(0, y: -1, z: 0, duration: animationDuration))
-            default:
-                break
-            }
+            cubeObject!.rotate(swipeGesture.direction)
         }
     }
     
