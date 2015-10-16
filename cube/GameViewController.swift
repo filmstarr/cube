@@ -59,6 +59,8 @@ class GameViewController: UIViewController {
         //Create and add a camera to the scene
         let cameraNode = SCNNode()
         cameraNode.camera = SCNCamera()
+        cameraNode.camera?.usesOrthographicProjection = true
+        cameraNode.camera?.orthographicScale = 8
         scene.rootNode.addChildNode(cameraNode)
         
         //Place the camera
