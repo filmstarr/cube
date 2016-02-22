@@ -33,6 +33,7 @@ class GameViewController: UIViewController {
         let scnView = self.view as! SCNView
         scnView.scene = scene
         scnView.backgroundColor = UIColor.whiteColor()
+        scnView.antialiasingMode = SCNAntialiasingMode.Multisampling4X
         
         //Register gestures
         self.gestures(scnView)
@@ -51,7 +52,7 @@ class GameViewController: UIViewController {
         let ambientLightNode = SCNNode()
         ambientLightNode.light = SCNLight()
         ambientLightNode.light!.type = SCNLightTypeAmbient
-        ambientLightNode.light!.color = UIColor.lightGrayColor()
+        ambientLightNode.light!.color = UIColor.init(colorLiteralRed: 0.7, green: 0.7, blue: 0.7, alpha: 0.5)
         scene.rootNode.addChildNode(ambientLightNode)
     }
     
