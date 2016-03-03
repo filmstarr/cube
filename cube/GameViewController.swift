@@ -16,24 +16,29 @@ class GameViewController: UIViewController {
     let π = M_PI
     let xAxis = SCNVector3.init(x: 1, y: 0, z: 0)
 
-    var cubeObject:cube?
+    var cube:Cube?
+    var gameGrid:GameGrid?
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         //Create scene
-        let scene = SCNScene(named: "art.scnassets/cube.scn")!
+        let scene = SCNScene(named: "art.scnassets/Cube.scn")!
         
         //Create objects
         self.lights(scene)
         let cameraNode = self.camera(scene)
-        self.cubeObject = self.createCube(scene, cameraNode: cameraNode)
+        self.cube = self.createCube(scene, cameraNode: cameraNode)
+        self.gameGrid = GameGrid(cube: self.cube!)
         
         //Create scene view
         let scnView = self.view as! SCNView
         scnView.scene = scene
         scnView.backgroundColor = UIColor.whiteColor()
+        
+        #if !DEBUG
         scnView.antialiasingMode = SCNAntialiasingMode.Multisampling4X
+        #endif
         
         //Register gestures
         self.gestures(scnView)
@@ -73,9 +78,9 @@ class GameViewController: UIViewController {
         return cameraNode
     }
     
-    func createCube(scene: SCNScene, cameraNode: SCNNode) -> cube {
+    func createCube(scene: SCNScene, cameraNode: SCNNode) -> Cube {
         let cubeNode = scene.rootNode.childNodeWithName("cube", recursively: true)
-        return cube(cubeNode: cubeNode!, cameraNode: cameraNode)
+        return Cube(cubeNode: cubeNode!, cameraNode: cameraNode)
     }
     
     func gestures(scnView: SCNView) {
@@ -102,7 +107,7 @@ class GameViewController: UIViewController {
     }
 
     func handleDoubleTap(gestureRecognize: UIGestureRecognizer) {
-        NSLog("handle double tap")
+        print("GameViewController:handle double tap")
         if (gestureRecognize as? UITapGestureRecognizer != nil) {
             let scnView = self.view as! SCNView
             scnView.allowsCameraControl = !scnView.allowsCameraControl
@@ -110,17 +115,17 @@ class GameViewController: UIViewController {
     }
     
     func handleSwipe(gestureRecognize: UIGestureRecognizer) {
-        NSLog("handle swipe")
+        print("GameViewController:handle swipe")
         if let swipeGesture = gestureRecognize as? UISwipeGestureRecognizer {
             switch swipeGesture.direction {
                 case UISwipeGestureRecognizerDirection.Right:
-                    cubeObject!.rotate(1.0, z: 0.0)
+                    self.cube!.rotate(1.0, z: 0.0)
                 case UISwipeGestureRecognizerDirection.Left:
-                    cubeObject!.rotate(-1.0, z: 0.0)
+                    self.cube!.rotate(-1.0, z: 0.0)
                 case UISwipeGestureRecognizerDirection.Up:
-                    cubeObject!.rotate(0.0, z: -1.0)
+                    self.cube!.rotate(0.0, z: -1.0)
                 case UISwipeGestureRecognizerDirection.Down:
-                    cubeObject!.rotate(0.0, z: 1.0)
+                    self.cube!.rotate(0.0, z: 1.0)
                 default:
                     break
             }
