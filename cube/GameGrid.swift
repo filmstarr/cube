@@ -19,13 +19,12 @@ class GameGrid {
     let zAxis = SCNVector3.init(x: 0.0, y: 0.0, z: 1.0)
     
     let cube:Cube
-    let scoreCard:SCNNode
+    let hud:Hud
     
-    var moves = 0
-    var maxMoves = 0
+    var score = 0
     
-    init(cube: Cube, scoreCard: SCNNode) {
-        self.scoreCard = scoreCard        
+    init(cube: Cube, hud: Hud) {
+        self.hud = hud
         self.cube = cube
         self.cube.events.listenTo("rotate", action: self.handleCubeRotation)
     }
@@ -37,16 +36,11 @@ class GameGrid {
             if (random > 0.9) {
                 print("GameGrid:die, die, die my darling")
                 self.cube.die()
-                moves = 0
+                self.score = 0
             } else {
-                moves++
-                print("GameGrid:\(moves) moves made")
-                if (moves > maxMoves) {
-                    maxMoves = moves
-                    let text = scoreCard.geometry as! SCNText
-                    text.string = maxMoves
-                    print("GameGrid:new high score \(maxMoves) moves made")
-                }
+                self.score++
+                print("GameGrid:\(self.score) moves made")
+                self.hud.updateScoreCard(self.score)
             }
         }
     }

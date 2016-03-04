@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B023F0F61C897C6400D0E789 /* Hud.swift in Sources */ = {isa = PBXBuildFile; fileRef = B023F0F51C897C6400D0E789 /* Hud.swift */; };
 		B02DA4941C88E1EC004E3DD0 /* GameGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = B02DA4931C88E1EC004E3DD0 /* GameGrid.swift */; };
 		B02DA4961C88E7A0004E3DD0 /* EventManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B02DA4951C88E7A0004E3DD0 /* EventManager.swift */; };
 		B0AF5AC81BC99FCB00856E62 /* Cube.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0AF5AC71BC99FCB00856E62 /* Cube.swift */; };
@@ -38,6 +39,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		B023F0F51C897C6400D0E789 /* Hud.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Hud.swift; sourceTree = "<group>"; };
 		B02DA4931C88E1EC004E3DD0 /* GameGrid.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = GameGrid.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		B02DA4951C88E7A0004E3DD0 /* EventManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventManager.swift; sourceTree = "<group>"; };
 		B0AF5AC71BC99FCB00856E62 /* Cube.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = Cube.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
@@ -115,6 +117,7 @@
 				B0F64BD11BC7010B007D40A8 /* LaunchScreen.storyboard */,
 				B0F64BD41BC7010B007D40A8 /* Info.plist */,
 				B02DA4951C88E7A0004E3DD0 /* EventManager.swift */,
+				B023F0F51C897C6400D0E789 /* Hud.swift */,
 			);
 			path = cube;
 			sourceTree = "<group>";
@@ -274,6 +277,7 @@
 				B02DA4941C88E1EC004E3DD0 /* GameGrid.swift in Sources */,
 				B0AF5AC81BC99FCB00856E62 /* Cube.swift in Sources */,
 				B0F64BC71BC7010B007D40A8 /* AppDelegate.swift in Sources */,
+				B023F0F61C897C6400D0E789 /* Hud.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

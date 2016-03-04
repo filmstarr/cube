@@ -25,6 +25,7 @@ class Cube {
     let cameraNode:SCNNode
     let cameraOrigin:SCNVector3
     let originalColour:UIColor
+    let hud:Hud
 
     let events = EventManager()
     
@@ -34,12 +35,13 @@ class Cube {
     var pendingRotations:[(x: Float, z: Float)] = []
     var position = SCNVector3.init(x: 0.0, y: 0.0, z: 0.0)
     
-    init(cubeNode: SCNNode, cameraNode: SCNNode) {
+    init(cubeNode: SCNNode, cameraNode: SCNNode, hud: Hud) {
         print("Cube:cube init")
         self.cameraNode = cameraNode
         self.cubeNode = cubeNode
         self.cameraOrigin = cameraNode.position
         self.originalColour = (self.cubeNode.geometry?.firstMaterial?.diffuse.contents)! as! UIColor
+        self.hud = hud
 
         var minVec = SCNVector3Zero
         var maxVec = SCNVector3Zero
@@ -122,7 +124,7 @@ class Cube {
     }
     
     //TODO: Try and use this to reduce duplicate code
-    //TODO: Show simple count of number of steps or distance travelled
+    //TODO: Extend objects? https://github.com/tutsplus/iOS-SpriteKitAndSceneKit-StarterProject/blob/master/CombinedSpriteKitSceneKit/OverlayScene.swift
     func animateTransition(function: () -> Void, animationDuration: Double) {
         SCNTransaction.begin()
         SCNTransaction.setAnimationDuration(animationDuration)
@@ -161,6 +163,7 @@ class Cube {
     
     func revive() {
         print("Cube:reviving")
+        self.hud.updateScoreCard(0)
         self.isDying = false
         let duration = 3.0
         SCNTransaction.begin()
