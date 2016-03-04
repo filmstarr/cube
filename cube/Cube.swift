@@ -30,9 +30,9 @@ class Cube {
     
     var rotationDuration = 0.25
     var isRotating = false
+    var isDying = false
     var pendingRotations:[(x: Float, z: Float)] = []
     var position = SCNVector3.init(x: 0.0, y: 0.0, z: 0.0)
-    var isAlive = true
     
     init(cubeNode: SCNNode, cameraNode: SCNNode) {
         print("Cube:cube init")
@@ -54,8 +54,8 @@ class Cube {
     }
     
     func rotate(var x: Float, var z: Float) {
-        if (isAlive) {
-            if (!isRotating) {
+        if (!self.isDying) {
+            if (!self.isRotating) {
                 print("Cube:rotate cube")
                 isRotating = true
                 let currentPosition = self.cubeNode.position
@@ -92,7 +92,10 @@ class Cube {
         self.isRotating = false
         
         //Check for any pending rotations that haven't been fulfilled
-        if (self.pendingRotations.count != 0 && self.isAlive) {
+        if (self.isDying) {
+            self.die()
+        }
+        else if (self.pendingRotations.count != 0) {
             let rotation = self.pendingRotations[0]
             self.pendingRotations.removeAtIndex(0)
             self.rotate(rotation.x, z: rotation.z)
@@ -118,20 +121,8 @@ class Cube {
         SCNTransaction.commit()
     }
     
-    func positionObject(object: SCNNode, animationDuration: Double, position: SCNVector3) {
-        print("Cube:position object")
-        
-        SCNTransaction.begin()
-        SCNTransaction.setAnimationDuration(animationDuration)
-        SCNTransaction.setAnimationTimingFunction(CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseOut))
-        object.position = position
-        SCNTransaction.commit()
-        
-    }
-    
     //TODO: Try and use this to reduce duplicate code
     //TODO: Show simple count of number of steps or distance travelled
-    //TODO: Time callback not firing when mid rotation
     func animateTransition(function: () -> Void, animationDuration: Double) {
         SCNTransaction.begin()
         SCNTransaction.setAnimationDuration(animationDuration)
@@ -142,33 +133,35 @@ class Cube {
     
     func die() {
         print("Cube:dying")
-        
-        let duration = 3.0
-        self.isAlive = false
+        self.isDying = true;
         self.pendingRotations.removeAll()
         
-        //Change colour
-        SCNTransaction.begin()
-        SCNTransaction.setAnimationDuration(duration)
-        SCNTransaction.setAnimationTimingFunction(CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseOut))
-        self.cubeNode.geometry?.firstMaterial?.diffuse.contents = UIColor.blackColor()
-        SCNTransaction.commit()
-        
-        //Position camera
-        self.positionObject(self.cameraNode, animationDuration: duration, position: self.cameraOrigin)
-        
-        //Position cube
-        self.position = self.origin
-        self.positionObject(self.cubeNode, animationDuration: duration, position: self.origin)
-        
-        //Bring back to life
-        NSTimer.scheduledTimerWithTimeInterval(duration, target:self, selector: "revive", userInfo: nil, repeats: false)
+        if (!self.isRotating) {
+            print("Cube:dead")
+            
+            let duration = 3.0
+            self.position = self.origin
+            
+            //Change colour and move back to origin
+            SCNTransaction.begin()
+            SCNTransaction.setAnimationDuration(duration)
+            SCNTransaction.setAnimationTimingFunction(CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseOut))
+            self.cubeNode.geometry?.firstMaterial?.diffuse.contents = UIColor.blackColor()
+            self.cubeNode.position = self.origin
+            self.cameraNode.position = self.cameraOrigin
+            SCNTransaction.commit()
+            
+            //Bring back to life
+            let revivalTime: dispatch_time_t = dispatch_time(DISPATCH_TIME_NOW, Int64(duration * Double(NSEC_PER_SEC)))
+            dispatch_after(revivalTime, dispatch_get_main_queue(), {
+                self.revive()
+            })
+        }
     }
     
-    dynamic func revive() {
+    func revive() {
         print("Cube:reviving")
-        self.isAlive = true
-        self.pendingRotations.removeAll()
+        self.isDying = false
         let duration = 3.0
         SCNTransaction.begin()
         SCNTransaction.setAnimationDuration(duration)

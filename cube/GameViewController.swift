@@ -28,8 +28,9 @@ class GameViewController: UIViewController {
         //Create objects
         self.lights(scene)
         let cameraNode = self.camera(scene)
+        let scoreCare = self.createScoreCard(scene)
         self.cube = self.createCube(scene, cameraNode: cameraNode)
-        self.gameGrid = GameGrid(cube: self.cube!)
+        self.gameGrid = GameGrid(cube: self.cube!, scoreCard: scoreCare)
         
         //Create scene view
         let scnView = self.view as! SCNView
@@ -81,6 +82,17 @@ class GameViewController: UIViewController {
     func createCube(scene: SCNScene, cameraNode: SCNNode) -> Cube {
         let cubeNode = scene.rootNode.childNodeWithName("cube", recursively: true)
         return Cube(cubeNode: cubeNode!, cameraNode: cameraNode)
+    }
+    
+    func createScoreCard(scene: SCNScene) -> SCNNode {
+        let textNode = SCNNode()
+        let text = SCNText(string: "", extrusionDepth: 1)
+        text.alignmentMode = kCAAlignmentRight
+        text.firstMaterial?.diffuse.contents = UIColor.blackColor()
+        textNode.geometry = text
+        textNode.position = SCNVector3Make(0, 0, 0)
+        scene.rootNode.addChildNode(textNode)
+        return textNode
     }
     
     func gestures(scnView: SCNView) {
