@@ -35,12 +35,12 @@ class Hud : SKScene {
         self.addChild(self.scoreCard!)
     }
     
-    func updateScoreCard(score: Int) {
-        self.score = score
+    func updateScoreCard(score: Float) {
+        self.score = Int(10 * score)
         if (self.score > self.highScore) {
             self.highScore = self.score
         }
-        self.scoreCard!.text = "Score: \(self.score). High score: \(self.highScore)"
+        self.scoreCard!.text = "Distance from home: \(self.score) High score: \(self.highScore)"
     }
     
 }
