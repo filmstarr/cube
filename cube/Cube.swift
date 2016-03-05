@@ -11,6 +11,7 @@ import UIKit
 import QuartzCore
 import SceneKit
 import Darwin
+import AudioToolbox
 
 class Cube {
     
@@ -46,10 +47,10 @@ class Cube {
         var minVec = SCNVector3Zero
         var maxVec = SCNVector3Zero
         if self.cubeNode.getBoundingBoxMin(&minVec, max: &maxVec) {
-           cubeSizeBy2 = (maxVec.x - minVec.x)/2
+           self.cubeSizeBy2 = (maxVec.x - minVec.x)/2
         }
         else {
-            cubeSizeBy2 = 0.0
+            self.cubeSizeBy2 = 0.0
         }
         
         self.resetRotation(0.0, zOffset: 0.0)
@@ -59,7 +60,7 @@ class Cube {
         if (!self.isDying) {
             if (!self.isRotating) {
                 print("Cube:rotate cube")
-                isRotating = true
+                self.isRotating = true
                 let currentPosition = self.cubeNode.position
                 x = sign(x)
                 z = sign(z)
@@ -68,12 +69,12 @@ class Cube {
                 self.cubeNode.position = SCNVector3(currentPosition.x + (self.cubeSizeBy2 * x), 0.0, currentPosition.z + (self.cubeSizeBy2 * z))
                 self.position = SCNVector3(self.position.x + x, 0.0, self.position.z + z)
                 if (x != 0.0) {
-                    self.cubeNode.runAction(SCNAction.rotateByAngle(CGFloat(-πBy2 * x), aroundAxis: zAxis, duration: rotationDuration), completionHandler:{param in
+                    self.cubeNode.runAction(SCNAction.rotateByAngle(CGFloat(-πBy2 * x), aroundAxis: zAxis, duration: self.rotationDuration), completionHandler:{param in
                             self.finaliseRotation(self.cubeSizeBy2 * x, zOffset: 0.0)
                     })
                 }
                 if (z != 0.0) {
-                    self.cubeNode.runAction(SCNAction.rotateByAngle(CGFloat(πBy2 * z), aroundAxis: xAxis, duration: rotationDuration), completionHandler:{param in
+                    self.cubeNode.runAction(SCNAction.rotateByAngle(CGFloat(πBy2 * z), aroundAxis: xAxis, duration: self.rotationDuration), completionHandler:{param in
                             self.finaliseRotation(0.0, zOffset: self.cubeSizeBy2 * z)
                     })
                 }
@@ -102,7 +103,7 @@ class Cube {
             self.pendingRotations.removeAtIndex(0)
             self.rotate(rotation.x, z: rotation.z)
             self.rotationDuration /= self.rotationDurationReductionFactor
-            print("Cube:rotation duration =",rotationDuration)
+            print("Cube:rotation duration =",self.rotationDuration)
         }
     }
     
@@ -115,22 +116,9 @@ class Cube {
     
     func updateCameraPosition(xChange: Float, zChange: Float) {
         print("Cube:position camera")
-
-        SCNTransaction.begin()
-        SCNTransaction.setAnimationDuration(1.0)
-        SCNTransaction.setAnimationTimingFunction(CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseOut))
-        cameraNode.position = SCNVector3Make(cameraNode.position.x + xChange, cameraNode.position.y, cameraNode.position.z + zChange)
-        SCNTransaction.commit()
-    }
-    
-    //TODO: Try and use this to reduce duplicate code
-    //TODO: Extend objects? https://github.com/tutsplus/iOS-SpriteKitAndSceneKit-StarterProject/blob/master/CombinedSpriteKitSceneKit/OverlayScene.swift
-    func animateTransition(function: () -> Void, animationDuration: Double) {
-        SCNTransaction.begin()
-        SCNTransaction.setAnimationDuration(animationDuration)
-        SCNTransaction.setAnimationTimingFunction(CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseOut))
-        function()
-        SCNTransaction.commit()
+        self.animateTransition({
+            self.cameraNode.position = SCNVector3Make(self.cameraNode.position.x + xChange, self.cameraNode.position.y, self.cameraNode.position.z + zChange)
+            }, animationDuration: 1.0)
     }
     
     func die() {
@@ -141,17 +129,16 @@ class Cube {
         if (!self.isRotating) {
             print("Cube:dead")
             
+            AudioServicesPlayAlertSound(SystemSoundID(kSystemSoundID_Vibrate))
             let duration = 3.0
             self.position = self.origin
             
             //Change colour and move back to origin
-            SCNTransaction.begin()
-            SCNTransaction.setAnimationDuration(duration)
-            SCNTransaction.setAnimationTimingFunction(CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseOut))
-            self.cubeNode.geometry?.firstMaterial?.diffuse.contents = UIColor.blackColor()
-            self.cubeNode.position = self.origin
-            self.cameraNode.position = self.cameraOrigin
-            SCNTransaction.commit()
+            self.animateTransition({
+                self.cubeNode.geometry?.firstMaterial?.diffuse.contents = UIColor.blackColor()
+                self.cubeNode.position = self.origin
+                self.cameraNode.position = self.cameraOrigin
+                }, animationDuration: duration)
             
             //Bring back to life
             let revivalTime: dispatch_time_t = dispatch_time(DISPATCH_TIME_NOW, Int64(duration * Double(NSEC_PER_SEC)))
@@ -165,11 +152,17 @@ class Cube {
         print("Cube:reviving")
         self.hud.updateScoreCard(0)
         self.isDying = false
-        let duration = 3.0
+        self.animateTransition({
+            self.cubeNode.geometry?.firstMaterial?.diffuse.contents = self.originalColour
+            }, animationDuration: 1.0)
+        
+    }
+    
+    func animateTransition(function: () -> Void, animationDuration: Double) {
         SCNTransaction.begin()
-        SCNTransaction.setAnimationDuration(duration)
+        SCNTransaction.setAnimationDuration(animationDuration)
         SCNTransaction.setAnimationTimingFunction(CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseOut))
-        self.cubeNode.geometry?.firstMaterial?.diffuse.contents = self.originalColour
+        function()
         SCNTransaction.commit()
     }
 }

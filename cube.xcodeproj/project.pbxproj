@@ -84,6 +84,24 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		B0DA2EE21C8B820700A37DF5 /* Objects */ = {
+			isa = PBXGroup;
+			children = (
+				B0AF5AC71BC99FCB00856E62 /* Cube.swift */,
+				B02DA4931C88E1EC004E3DD0 /* GameGrid.swift */,
+				B023F0F51C897C6400D0E789 /* Hud.swift */,
+			);
+			name = Objects;
+			sourceTree = "<group>";
+		};
+		B0DA2EE31C8B823400A37DF5 /* Infrastructure */ = {
+			isa = PBXGroup;
+			children = (
+				B02DA4951C88E7A0004E3DD0 /* EventManager.swift */,
+			);
+			name = Infrastructure;
+			sourceTree = "<group>";
+		};
 		B0F64BBA1BC7010B007D40A8 = {
 			isa = PBXGroup;
 			children = (
@@ -107,17 +125,15 @@
 		B0F64BC51BC7010B007D40A8 /* cube */ = {
 			isa = PBXGroup;
 			children = (
+				B0DA2EE31C8B823400A37DF5 /* Infrastructure */,
 				B0F64BC61BC7010B007D40A8 /* AppDelegate.swift */,
 				B0F64BC81BC7010B007D40A8 /* art.scnassets */,
 				B0F64BCA1BC7010B007D40A8 /* GameViewController.swift */,
-				B0AF5AC71BC99FCB00856E62 /* Cube.swift */,
-				B02DA4931C88E1EC004E3DD0 /* GameGrid.swift */,
+				B0DA2EE21C8B820700A37DF5 /* Objects */,
 				B0F64BCC1BC7010B007D40A8 /* Main.storyboard */,
 				B0F64BCF1BC7010B007D40A8 /* Assets.xcassets */,
 				B0F64BD11BC7010B007D40A8 /* LaunchScreen.storyboard */,
 				B0F64BD41BC7010B007D40A8 /* Info.plist */,
-				B02DA4951C88E7A0004E3DD0 /* EventManager.swift */,
-				B023F0F51C897C6400D0E789 /* Hud.swift */,
 			);
 			path = cube;
 			sourceTree = "<group>";
