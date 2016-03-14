@@ -32,7 +32,7 @@ class GameViewController: UIViewController {
         let cameraNode = self.camera(scene)
         self.hud = Hud(size: self.view.bounds.size)
         self.cube = self.createCube(scene, cameraNode: cameraNode, hud: hud!)
-        self.gameGrid = GameGrid(cube: self.cube!, hud: hud!)
+        self.gameGrid = self.createGameGrid(scene, hud: hud!)
         
         //Create scene view
         self.sceneView = self.view as? SCNView
@@ -85,6 +85,11 @@ class GameViewController: UIViewController {
     func createCube(scene: SCNScene, cameraNode: SCNNode, hud: Hud) -> Cube {
         let cubeNode = scene.rootNode.childNodeWithName("cube", recursively: true)
         return Cube(cubeNode: cubeNode!, cameraNode: cameraNode, hud: hud)
+    }
+
+    func createGameGrid(scene: SCNScene, hud: Hud) -> GameGrid {
+        let floorNode = scene.rootNode.childNodeWithName("floor", recursively: true)
+        return GameGrid(floorNode: floorNode!, cube: self.cube!, hud: hud)
     }
     
     func registerGestures() {

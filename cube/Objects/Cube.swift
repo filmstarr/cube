@@ -38,8 +38,8 @@ class Cube {
     
     init(cubeNode: SCNNode, cameraNode: SCNNode, hud: Hud) {
         print("Cube:cube init")
-        self.cameraNode = cameraNode
         self.cubeNode = cubeNode
+        self.cameraNode = cameraNode
         self.cameraOrigin = cameraNode.position
         self.originalColour = (self.cubeNode.geometry?.firstMaterial?.diffuse.contents)! as! UIColor
         self.hud = hud
@@ -60,6 +60,9 @@ class Cube {
         if (!self.isDying) {
             if (!self.isRotating) {
                 print("Cube:rotate cube")
+                let information = (self.position, false)
+                self.events.trigger("rotateFrom", information: information)
+
                 self.isRotating = true
                 let currentPosition = self.cubeNode.position
                 x = sign(x)
@@ -79,7 +82,7 @@ class Cube {
                     })
                 }
                 self.updateCameraPosition(self.cubeSizeBy2 * 2 * x, zChange: self.cubeSizeBy2 * 2 * z)
-                self.events.trigger("rotate", information: self.position)
+                self.events.trigger("rotateTo", information: self.position)
             }
             else {
                 print("Cube:queue rotation")
@@ -96,6 +99,8 @@ class Cube {
         
         //Check for any pending rotations that haven't been fulfilled
         if (self.isDying) {
+            let information = (self.position, true)
+            self.events.trigger("rotateFrom", information: information)
             self.die()
         }
         else if (self.pendingRotations.count != 0) {
@@ -141,10 +146,7 @@ class Cube {
                 }, animationDuration: duration)
             
             //Bring back to life
-            let revivalTime: dispatch_time_t = dispatch_time(DISPATCH_TIME_NOW, Int64(duration * Double(NSEC_PER_SEC)))
-            dispatch_after(revivalTime, dispatch_get_main_queue(), {
-                self.revive()
-            })
+            self.delayedFunctionCall(self.revive, delay: duration)
         }
     }
     
@@ -156,6 +158,15 @@ class Cube {
             self.cubeNode.geometry?.firstMaterial?.diffuse.contents = self.originalColour
             }, animationDuration: 1.0)
         
+    }
+    
+    
+    
+    func delayedFunctionCall(function: () -> Void, delay: Double) {
+        let runTime: dispatch_time_t = dispatch_time(DISPATCH_TIME_NOW, Int64(delay * Double(NSEC_PER_SEC)))
+        dispatch_after(runTime, dispatch_get_main_queue(), {
+            function()
+        })
     }
     
     func animateTransition(function: () -> Void, animationDuration: Double) {
