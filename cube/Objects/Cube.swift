@@ -123,7 +123,7 @@ class Cube {
         print("Cube:position camera")
         self.animateTransition({
             self.cameraNode.position = SCNVector3Make(self.cameraNode.position.x + xChange, self.cameraNode.position.y, self.cameraNode.position.z + zChange)
-            }, animationDuration: 1.0)
+        }, animationDuration: 1.0)
     }
     
     func die() {
@@ -143,7 +143,7 @@ class Cube {
                 self.cubeNode.geometry?.firstMaterial?.diffuse.contents = UIColor.blackColor()
                 self.cubeNode.position = self.origin
                 self.cameraNode.position = self.cameraOrigin
-                }, animationDuration: duration)
+            }, animationDuration: duration)
             
             //Bring back to life
             self.delayedFunctionCall(self.revive, delay: duration)
@@ -152,11 +152,11 @@ class Cube {
     
     func revive() {
         print("Cube:reviving")
-        self.hud.updateScoreCard(0)
+        self.events.trigger("reviving")
         self.isDying = false
         self.animateTransition({
             self.cubeNode.geometry?.firstMaterial?.diffuse.contents = self.originalColour
-            }, animationDuration: 1.0)
+        }, animationDuration: 1.0)
         
     }
     

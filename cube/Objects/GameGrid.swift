@@ -14,13 +14,16 @@ class GameGrid {
     let xAxis = SCNVector3.init(x: 1.0, y: 0.0, z: 0.0)
     let zAxis = SCNVector3.init(x: 0.0, y: 0.0, z: 1.0)
     let cubeSize:CGFloat
+    let epsilon = 0.001 as Float
 
     let floorNode:SCNNode
     let cube:Cube
     let hud:Hud
     
     var score = 0.0 as Float
+    var tileScore = 0.0 as Float
     var tiles: [String:SCNNode] = [:]
+    var lastCubePosition: SCNVector3 = SCNVector3.init(x: 0.0, y: 0.0, z: 0.0)
     
     init(floorNode: SCNNode, cube: Cube, hud: Hud) {
         self.floorNode = floorNode
@@ -30,28 +33,35 @@ class GameGrid {
         
         self.cube.events.listenTo("rotateFrom", action: self.cubeRotatedFrom)
         self.cube.events.listenTo("rotateTo", action: self.cubeRotatingTo)
-    }
-    
-    func cubeRotatingTo(information:Any?) {
-        if let cubePosition = information as? SCNVector3 {
-            print("GameGrid:cube position \(cubePosition)")
-            let random = self.random2D(Int(cubePosition.x), b: Int(cubePosition.z))
-            print("GameGrid:random number = \(random)")
-            if (random > 0.9 && !(cubePosition.x == 0.0 && cubePosition.z == 0.0)) {
-                print("GameGrid:die, die, die my darling")
-                self.cube.die()
-                self.score = 0.0 as Float
-            } else {
-                self.score = sqrt(pow(cubePosition.x, 2.0) + pow(cubePosition.z, 2.0))
-                print("GameGrid:\(self.score) moved")
-                self.hud.updateScoreCard(self.score)
-            }
-        }
+        self.cube.events.listenTo("reviving", action: self.updateScore)
     }
     
     func cubeRotatedFrom(information:Any?) {
         if let rotationInformation = information as? (SCNVector3, Bool) {
             self.addFloorTile(rotationInformation.0, isDying: rotationInformation.1)
+        }
+    }
+    
+    func cubeRotatingTo(information:Any?) {
+        if let cubePosition = information as? SCNVector3 {
+            
+            let key = String(cubePosition.x) + "," + String(cubePosition.z)
+            if (self.tiles[key] == nil) {
+                self.tileScore++
+            }
+            
+            self.lastCubePosition = cubePosition
+            print("GameGrid:cube position \(cubePosition)")
+            let random = self.random2D(Int(cubePosition.x), b: Int(cubePosition.z))
+            print("GameGrid:random number = \(random)")
+            if (random > 0.9 && !(cubePosition.x == 0.0 && cubePosition.z == 0.0)) {
+                print("GameGrid:die, die, die my darling")
+                self.updateScore()
+                self.lastCubePosition = SCNVector3.init(x: 0.0, y: 0.0, z: 0.0)
+                self.cube.die()
+            } else {
+                self.updateScore()
+            }
         }
     }
     
@@ -69,19 +79,33 @@ class GameGrid {
         let key = String(position.x) + "," + String(position.z)
         if (self.tiles[key] != nil) {
             self.tiles[key]?.removeFromParentNode()
+            self.tiles.removeValueForKey(key)
         }
 
-        let planeGeometry = SCNPlane(width: self.cubeSize, height: self.cubeSize)
-        planeGeometry.firstMaterial?.diffuse.contents = (isDying ? UIColor.blackColor() : self.cube.originalColour)
-        let planeNode = SCNNode(geometry: planeGeometry)
-        planeNode.eulerAngles = SCNVector3(x: GLKMathDegreesToRadians(-90), y: 0, z: 0)
-        planeNode.position = SCNVector3(x: position.x, y: 0.001, z: position.z)
-        self.floorNode.addChildNode(planeNode)
-        tiles[String(position.x) + "," + String(position.z)] = planeNode
+        let tile = SCNPlane(width: self.cubeSize, height: self.cubeSize)
+        tile.firstMaterial?.diffuse.contents = (isDying ? UIColor.blackColor() : self.cube.originalColour)
+        let tileNode = SCNNode(geometry: tile)
+        tileNode.eulerAngles = SCNVector3(x: GLKMathDegreesToRadians(-90), y: 0, z: 0)
+        tileNode.position = SCNVector3(x: position.x, y: epsilon, z: position.z)
+        self.floorNode.addChildNode(tileNode)
+        tiles[String(position.x) + "," + String(position.z)] = tileNode
+        self.tileScore = Float(self.tiles.count)
+        
         self.delayedFunctionCall({
-            planeNode.removeFromParentNode()
+            if (self.tiles[key] == tileNode) {
+                self.tiles[key]?.removeFromParentNode()
+                self.tiles.removeValueForKey(key)
+                self.tileScore--
+                self.updateScore()
             }
-            , delay: 30)
+        } , delay: 20)
+    }
+    
+    func updateScore() {
+        self.score = sqrt(pow(self.lastCubePosition.x, 2.0) + pow(self.lastCubePosition.z, 2.0))
+        self.score += self.tileScore
+        print("GameGrid:score = \(self.score)")
+        self.hud.updateScoreCard(Int(self.score*10.0))
     }
     
     
