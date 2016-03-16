@@ -26,7 +26,6 @@ class Cube {
     let cameraNode:SCNNode
     let cameraOrigin:SCNVector3
     let originalColour:UIColor
-    let hud:Hud
 
     let events = EventManager()
     
@@ -36,13 +35,12 @@ class Cube {
     var pendingRotations:[(x: Float, z: Float)] = []
     var position = SCNVector3.init(x: 0.0, y: 0.0, z: 0.0)
     
-    init(cubeNode: SCNNode, cameraNode: SCNNode, hud: Hud) {
+    init(cubeNode: SCNNode, cameraNode: SCNNode) {
         print("Cube:cube init")
         self.cubeNode = cubeNode
         self.cameraNode = cameraNode
         self.cameraOrigin = cameraNode.position
         self.originalColour = (self.cubeNode.geometry?.firstMaterial?.diffuse.contents)! as! UIColor
-        self.hud = hud
 
         var minVec = SCNVector3Zero
         var maxVec = SCNVector3Zero

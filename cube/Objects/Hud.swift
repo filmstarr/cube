@@ -15,6 +15,7 @@ class Hud : SKScene {
     var score = 0
     var highScore = 0
     var scoreCard: SKLabelNode?
+    var tintColour = UIColor.blackColor()
     
     let store = NSUserDefaults.standardUserDefaults()
     
@@ -27,6 +28,10 @@ class Hud : SKScene {
 
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
+    }
+    
+    func setTint(colour: UIColor) {
+        self.tintColour = colour
     }
     
     func addScoreCard() {
@@ -49,4 +54,24 @@ class Hud : SKScene {
         self.scoreCard!.text = "Score: \(self.score) High score: \(self.highScore)"
     }
     
+    override func didMoveToView(view: SKView)
+    {
+        self.addDifficultySlider()
+    }
+    
+    func addDifficultySlider() {
+        let sliderDemo = UISlider(frame:CGRectMake(20, 260, 280, 20))
+        sliderDemo.minimumValue = 0
+        sliderDemo.maximumValue = 1
+        sliderDemo.continuous = true
+        sliderDemo.tintColor = self.tintColour
+        sliderDemo.value = 50
+        sliderDemo.addTarget(self, action: "updateDifficulty:", forControlEvents: .ValueChanged)
+        self.view?.addSubview(sliderDemo)
+    }
+    
+    func updateDifficulty(sender:UISlider!)
+    {
+        print("value = \(sender.value)")
+    }
 }

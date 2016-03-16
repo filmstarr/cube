@@ -30,8 +30,9 @@ class GameViewController: UIViewController {
         //Create objects
         self.lights(scene)
         let cameraNode = self.camera(scene)
+        self.cube = self.createCube(scene, cameraNode: cameraNode)
         self.hud = Hud(size: self.view.bounds.size)
-        self.cube = self.createCube(scene, cameraNode: cameraNode, hud: hud!)
+        self.hud?.setTint((self.cube?.originalColour)!)
         self.gameGrid = self.createGameGrid(scene, hud: hud!)
         
         //Create scene view
@@ -82,9 +83,9 @@ class GameViewController: UIViewController {
         return cameraNode
     }
     
-    func createCube(scene: SCNScene, cameraNode: SCNNode, hud: Hud) -> Cube {
+    func createCube(scene: SCNScene, cameraNode: SCNNode) -> Cube {
         let cubeNode = scene.rootNode.childNodeWithName("cube", recursively: true)
-        return Cube(cubeNode: cubeNode!, cameraNode: cameraNode, hud: hud)
+        return Cube(cubeNode: cubeNode!, cameraNode: cameraNode)
     }
 
     func createGameGrid(scene: SCNScene, hud: Hud) -> GameGrid {
