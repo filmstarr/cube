@@ -96,11 +96,12 @@ class Cube {
     func finaliseRotation(xOffset: Float, zOffset: Float) {
         self.resetRotation(xOffset, zOffset: zOffset)
         self.isRotating = false
+
+        let information = (self.position, true)
+        self.events.trigger("rotateFrom", information: information)
         
         //Check for any pending rotations that haven't been fulfilled
         if (self.isDying) {
-            let information = (self.position, true)
-            self.events.trigger("rotateFrom", information: information)
             self.die()
         }
         else if (self.pendingRotations.count != 0) {
@@ -135,15 +136,18 @@ class Cube {
             print("Cube:dead")
             
             AudioServicesPlayAlertSound(SystemSoundID(kSystemSoundID_Vibrate))
-            let duration = 3.0
+            let duration = 2.0
             self.position = self.origin
             
             //Change colour and move back to origin
             self.animateTransition({
                 self.cubeNode.geometry?.firstMaterial?.diffuse.contents = UIColor.blackColor()
+            }, animationDuration: duration / 2.0)
+
+            self.animateTransition({
                 self.cubeNode.position = self.origin
                 self.cameraNode.position = self.cameraOrigin
-            }, animationDuration: duration)
+                }, animationDuration: duration)
             
             //Bring back to life
             self.delayedFunctionCall(self.revive, delay: duration)

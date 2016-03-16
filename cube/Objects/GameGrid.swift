@@ -104,8 +104,9 @@ class GameGrid {
     func updateScore() {
         self.score = sqrt(pow(self.lastCubePosition.x, 2.0) + pow(self.lastCubePosition.z, 2.0))
         self.score += self.tileScore
+        self.score *= 10.0
         print("GameGrid:score = \(self.score)")
-        self.hud.updateScoreCard(Int(self.score*10.0))
+        self.hud.updateScoreCard(Int(self.score))
     }
     
     
