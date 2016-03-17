@@ -16,13 +16,16 @@ class Hud : SKScene {
     var highScore = 0
     var scoreCard: SKLabelNode?
     var tintColour = UIColor.blackColor()
+    var difficulty = Float(0.1)
     
     let store = NSUserDefaults.standardUserDefaults()
+    let events = EventManager()
     
     override init(size: CGSize) {
         super.init(size: size)
         self.backgroundColor = UIColor.clearColor()
         self.highScore = self.store.integerForKey("highScore")
+        self.difficulty = self.store.floatForKey("difficulty")
         self.addScoreCard()
     }
 
@@ -60,18 +63,31 @@ class Hud : SKScene {
     }
     
     func addDifficultySlider() {
-        let sliderDemo = UISlider(frame:CGRectMake(20, 260, 280, 20))
-        sliderDemo.minimumValue = 0
-        sliderDemo.maximumValue = 1
-        sliderDemo.continuous = true
-        sliderDemo.tintColor = self.tintColour
-        sliderDemo.value = 50
-        sliderDemo.addTarget(self, action: "updateDifficulty:", forControlEvents: .ValueChanged)
-        self.view?.addSubview(sliderDemo)
+        let difficultyLabel = SKLabelNode(fontNamed: "Arial")
+        difficultyLabel.fontSize = 12
+        difficultyLabel.fontColor = UIColor.blackColor()
+        difficultyLabel.text = "Difficulty"
+        difficultyLabel.position = CGPointMake(CGRectGetMaxX(difficultyLabel.frame) + 8, CGRectGetMaxY(self.frame) - 20)
+        self.addChild(difficultyLabel)
+        
+        let difficultySlider = UISlider(frame:CGRectMake(0, 0, 300, 20))
+        difficultySlider.minimumValue = 0.05
+        difficultySlider.maximumValue = 0.3
+        difficultySlider.continuous = false
+        difficultySlider.tintColor = self.tintColour
+        difficultySlider.value = self.difficulty
+        difficultySlider.addTarget(self, action: "updateDifficulty:", forControlEvents: .ValueChanged)
+        difficultySlider.center = CGPointMake((CGRectGetMaxX(difficultyLabel.frame) / 2) + 2, CGRectGetMaxY(self.frame) / 2)
+        difficultySlider.transform = CGAffineTransformMakeRotation(CGFloat(-M_PI_2))
+        self.view?.addSubview(difficultySlider)
     }
     
     func updateDifficulty(sender:UISlider!)
     {
-        print("value = \(sender.value)")
+        self.difficulty = sender.value
+        self.store.setValue(self.difficulty, forKey: "difficulty")
+        self.store.synchronize()
+        self.events.trigger("difficultyUpdated", information: self.difficulty)
+        print("Hud:Difficulty = \(difficulty)")
     }
 }

@@ -58,9 +58,6 @@ class Cube {
         if (!self.isDying) {
             if (!self.isRotating) {
                 print("Cube:rotate cube")
-                let information = (self.position, false)
-                self.events.trigger("rotateFrom", information: information)
-
                 self.isRotating = true
                 let currentPosition = self.cubeNode.position
                 x = sign(x)
@@ -80,7 +77,7 @@ class Cube {
                     })
                 }
                 self.updateCameraPosition(self.cubeSizeBy2 * 2 * x, zChange: self.cubeSizeBy2 * 2 * z)
-                self.events.trigger("rotateTo", information: self.position)
+                self.events.trigger("rotatingTo", information: self.position)
             }
             else {
                 print("Cube:queue rotation")
@@ -95,8 +92,8 @@ class Cube {
         self.resetRotation(xOffset, zOffset: zOffset)
         self.isRotating = false
 
-        let information = (self.position, true)
-        self.events.trigger("rotateFrom", information: information)
+        let information = (self.position, self.isDying)
+        self.events.trigger("rotatedTo", information: information)
         
         //Check for any pending rotations that haven't been fulfilled
         if (self.isDying) {
@@ -154,7 +151,6 @@ class Cube {
     
     func revive() {
         print("Cube:reviving")
-        self.events.trigger("reviving")
         self.isDying = false
         self.animateTransition({
             self.cubeNode.geometry?.firstMaterial?.diffuse.contents = self.originalColour

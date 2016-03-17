@@ -19,49 +19,62 @@ class GameGrid {
     let floorNode:SCNNode
     let cube:Cube
     let hud:Hud
+    let store = NSUserDefaults.standardUserDefaults()
     
     var score = 0.0 as Float
-    var tileScore = 0.0 as Float
-    var tiles: [String:SCNNode] = [:]
+    var tiles: [String:(SCNNode, Bool)] = [:]
     var lastCubePosition: SCNVector3 = SCNVector3.init(x: 0.0, y: 0.0, z: 0.0)
+    var difficulty = Float(0.1)
     
     init(floorNode: SCNNode, cube: Cube, hud: Hud) {
         self.floorNode = floorNode
         self.hud = hud
         self.cube = cube
         self.cubeSize = CGFloat(self.cube.cubeSizeBy2) * 2
+        self.difficulty = self.store.floatForKey("difficulty")
+        self.addFloorTile(lastCubePosition, isDying: false)
         
-        self.cube.events.listenTo("rotateFrom", action: self.cubeRotatedFrom)
-        self.cube.events.listenTo("rotateTo", action: self.cubeRotatingTo)
-        self.cube.events.listenTo("reviving", action: self.updateScore)
-    }
-    
-    func cubeRotatedFrom(information:Any?) {
-        if let rotationInformation = information as? (SCNVector3, Bool) {
-            self.addFloorTile(rotationInformation.0, isDying: rotationInformation.1)
-        }
+        self.cube.events.listenTo("rotatingTo", action: self.cubeRotatingTo)
+        self.cube.events.listenTo("rotatedTo", action: self.cubeRotatedTo)
+        self.hud.events.listenTo("difficultyUpdated", action: self.setDifficulty)
     }
     
     func cubeRotatingTo(information:Any?) {
+        //We perform this logic here before the cube has finished rotating to prevent overshooting into the next rotation.
         if let cubePosition = information as? SCNVector3 {
-            
-            let key = String(cubePosition.x) + "," + String(cubePosition.z)
-            if (self.tiles[key] == nil) {
-                self.tileScore++
-            }
-            
             self.lastCubePosition = cubePosition
             print("GameGrid:cube position \(cubePosition)")
             let random = self.random2D(Int(cubePosition.x), b: Int(cubePosition.z))
             print("GameGrid:random number = \(random)")
-            if (random > 0.9 && !(cubePosition.x == 0.0 && cubePosition.z == 0.0)) {
+            
+            //We've been here before so look at what this tile held, don't recalculate it.
+            let key = String(cubePosition.x) + "," + String(cubePosition.z)
+            if (self.tiles[key] != nil) {
+                if (self.tiles[key]!.1) {
+                    print("GameGrid:die, die, die my darling")
+                    self.lastCubePosition = SCNVector3.init(x: 0.0, y: 0.0, z: 0.0)
+                    self.cube.die()
+                } else {
+                    self.updateScore(cubePosition)
+                }
+                return
+            }
+            
+            //New tile let's see what'll happen
+            let distanceFromHome = sqrt(pow(self.lastCubePosition.x, 2.0) + pow(self.lastCubePosition.z, 2.0))
+            if (distanceFromHome > 3 && random > Double(1.0 - self.difficulty) && !(cubePosition.x == 0.0 && cubePosition.z == 0.0)) {
                 print("GameGrid:die, die, die my darling")
-                self.updateScore()
                 self.lastCubePosition = SCNVector3.init(x: 0.0, y: 0.0, z: 0.0)
                 self.cube.die()
             } else {
-                self.updateScore()
+                self.updateScore(cubePosition)
             }
+        }
+    }
+    
+    func cubeRotatedTo(information:Any?) {
+        if let rotationInformation = information as? (SCNVector3, Bool) {
+            self.addFloorTile(rotationInformation.0, isDying: rotationInformation.1)
         }
     }
     
@@ -76,10 +89,10 @@ class GameGrid {
     }
     
     func addFloorTile(position: SCNVector3, isDying: Bool) {
+        //Already got one
         let key = String(position.x) + "," + String(position.z)
         if (self.tiles[key] != nil) {
-            self.tiles[key]?.removeFromParentNode()
-            self.tiles.removeValueForKey(key)
+            return
         }
 
         let tile = SCNPlane(width: self.cubeSize, height: self.cubeSize)
@@ -88,42 +101,23 @@ class GameGrid {
         tileNode.eulerAngles = SCNVector3(x: GLKMathDegreesToRadians(-90), y: 0, z: 0)
         tileNode.position = SCNVector3(x: position.x, y: epsilon, z: position.z)
         self.floorNode.addChildNode(tileNode)
-        tiles[String(position.x) + "," + String(position.z)] = tileNode
-        self.tileScore = Float(self.tiles.count)
-        
-        self.delayedFunctionCall({
-            if (self.tiles[key] == tileNode) {
-                self.tiles[key]?.removeFromParentNode()
-                self.tiles.removeValueForKey(key)
-                self.tileScore--
-                self.updateScore()
-            }
-        } , delay: 20)
+        tiles[String(position.x) + "," + String(position.z)] = (tileNode, isDying)
     }
     
-    func updateScore() {
-        self.score = sqrt(pow(self.lastCubePosition.x, 2.0) + pow(self.lastCubePosition.z, 2.0))
-        self.score += self.tileScore
-        self.score *= 10.0
-        print("GameGrid:score = \(self.score)")
+    func updateScore(position: SCNVector3) {
+        let key = String(position.x) + "," + String(position.z)
+        if (self.tiles[key] == nil) {
+            self.score += 100.0 * self.difficulty
+            self.score += 50.0 * self.difficulty * log10(sqrt(pow(self.lastCubePosition.x, 2.0) + pow(self.lastCubePosition.z, 2.0)))
+        }
         self.hud.updateScoreCard(Int(self.score))
+        print("GameGrid:score = \(self.score)")
     }
     
-    
-    
-    
-    func delayedFunctionCall(function: () -> Void, delay: Double) {
-        let runTime: dispatch_time_t = dispatch_time(DISPATCH_TIME_NOW, Int64(delay * Double(NSEC_PER_SEC)))
-        dispatch_after(runTime, dispatch_get_main_queue(), {
-            function()
-        })
-    }
-    
-    func animateTransition(function: () -> Void, animationDuration: Double) {
-        SCNTransaction.begin()
-        SCNTransaction.setAnimationDuration(animationDuration)
-        SCNTransaction.setAnimationTimingFunction(CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseOut))
-        function()
-        SCNTransaction.commit()
+    func setDifficulty(information:Any?) {
+        if let newDifficulty = information as? Float {
+            print("GameGrid:difficulty = \(newDifficulty)")
+            self.difficulty = newDifficulty
+        }
     }
 }
