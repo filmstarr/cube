@@ -18,8 +18,6 @@ class GameViewController: UIViewController {
     
     var sceneView:SCNView?
     var cube:Cube?
-    var gameGrid:GameGrid?
-    var hud:Hud?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -28,18 +26,17 @@ class GameViewController: UIViewController {
         let scene = SCNScene(named: "art.scnassets/Cube.scn")!
         
         //Create objects
-        self.lights(scene)
-        let cameraNode = self.camera(scene)
-        self.cube = self.createCube(scene, cameraNode: cameraNode)
-        self.hud = Hud(size: self.view.bounds.size)
-        self.hud?.setTint((self.cube?.originalColour)!)
-        self.gameGrid = self.createGameGrid(scene, hud: hud!)
+        self.createLights(scene)
+        self.cube = self.createCube(scene)
+        self.createCamera(scene, cube: self.cube!)
+        let hud = Hud(size: self.view.bounds.size, tintColour: (self.cube?.originalColour)!)
+        self.createGameGrid(scene, cube: self.cube!, hud: hud)
         
         //Create scene view
         self.sceneView = self.view as? SCNView
         self.sceneView!.scene = scene
         self.sceneView!.backgroundColor = UIColor.whiteColor()
-        self.sceneView!.overlaySKScene = self.hud
+        self.sceneView!.overlaySKScene = hud
         
         #if !DEBUG
             self.sceneView!.antialiasingMode = SCNAntialiasingMode.Multisampling4X
@@ -49,7 +46,7 @@ class GameViewController: UIViewController {
         self.registerGestures()
     }
     
-    func lights(scene: SCNScene) {
+    func createLights(scene: SCNScene) {
         //Create and add a light to the scene
         let lightNode = SCNNode()
         lightNode.light = SCNLight()
@@ -66,31 +63,19 @@ class GameViewController: UIViewController {
         scene.rootNode.addChildNode(ambientLightNode)
     }
     
-    func camera(scene: SCNScene) -> SCNNode {
-        //Create and add a camera to the scene
-        let cameraNode = SCNNode()
-        cameraNode.camera = SCNCamera()
-        cameraNode.camera?.usesOrthographicProjection = true
-        cameraNode.camera?.orthographicScale = 8
-        scene.rootNode.addChildNode(cameraNode)
-        
-        //Place the camera
-        let cameraHeight:Float = 10.0
-        let cameraAngle = π/6
-        cameraNode.position = SCNVector3(x: 0.0, y: cameraHeight, z: cameraHeight * Float(tan(cameraAngle)))
-        cameraNode.runAction(SCNAction.rotateByAngle(CGFloat(cameraAngle-π/2), aroundAxis: xAxis, duration: 0.0))
-        
-        return cameraNode
+    func createCamera(scene: SCNScene, cube: Cube) {
+        let camera = Camera(cube: cube)
+        scene.rootNode.addChildNode(camera)
     }
     
-    func createCube(scene: SCNScene, cameraNode: SCNNode) -> Cube {
+    func createCube(scene: SCNScene) -> Cube {
         let cubeNode = scene.rootNode.childNodeWithName("cube", recursively: true)
-        return Cube(cubeNode: cubeNode!, cameraNode: cameraNode)
+        return Cube(cubeNode: cubeNode!)
     }
 
-    func createGameGrid(scene: SCNScene, hud: Hud) -> GameGrid {
-        let floorNode = scene.rootNode.childNodeWithName("floor", recursively: true)
-        return GameGrid(floorNode: floorNode!, cube: self.cube!, hud: hud)
+    func createGameGrid(scene: SCNScene, cube: Cube, hud: Hud) -> GameGrid {
+        let floor = scene.rootNode.childNodeWithName("floor", recursively: true)
+        return GameGrid(floor: floor!, cube: cube, hud: hud)
     }
     
     func registerGestures() {

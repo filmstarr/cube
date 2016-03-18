@@ -21,9 +21,11 @@ class Hud : SKScene {
     let store = NSUserDefaults.standardUserDefaults()
     let events = EventManager()
     
-    override init(size: CGSize) {
+    init(size: CGSize, tintColour: UIColor) {
         super.init(size: size)
+
         self.backgroundColor = UIColor.clearColor()
+        self.tintColour = tintColour
         self.highScore = self.store.integerForKey("highScore")
         self.difficulty = self.store.floatForKey("difficulty")
         self.addScoreCard()
@@ -32,11 +34,7 @@ class Hud : SKScene {
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
     }
-    
-    func setTint(colour: UIColor) {
-        self.tintColour = colour
-    }
-    
+        
     func addScoreCard() {
         self.scoreCard = SKLabelNode(fontNamed: "Arial")
         self.scoreCard!.fontSize = 12

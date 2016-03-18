@@ -16,7 +16,7 @@ class GameGrid {
     let cubeSize:CGFloat
     let epsilon = 0.001 as Float
 
-    let floorNode:SCNNode
+    let floor:SCNNode
     let cube:Cube
     let hud:Hud
     let store = NSUserDefaults.standardUserDefaults()
@@ -26,8 +26,8 @@ class GameGrid {
     var lastCubePosition: SCNVector3 = SCNVector3.init(x: 0.0, y: 0.0, z: 0.0)
     var difficulty = Float(0.1)
     
-    init(floorNode: SCNNode, cube: Cube, hud: Hud) {
-        self.floorNode = floorNode
+    init(floor: SCNNode, cube: Cube, hud: Hud) {
+        self.floor = floor
         self.hud = hud
         self.cube = cube
         self.cubeSize = CGFloat(self.cube.cubeSizeBy2) * 2
@@ -73,7 +73,7 @@ class GameGrid {
     }
     
     func cubeRotatedTo(information:Any?) {
-        if let rotationInformation = information as? (SCNVector3, Bool) {
+        if let rotationInformation = information as? (position: SCNVector3, isDying: Bool) {
             self.addFloorTile(rotationInformation.0, isDying: rotationInformation.1)
         }
     }
@@ -100,7 +100,7 @@ class GameGrid {
         let tileNode = SCNNode(geometry: tile)
         tileNode.eulerAngles = SCNVector3(x: GLKMathDegreesToRadians(-90), y: 0, z: 0)
         tileNode.position = SCNVector3(x: position.x, y: epsilon, z: position.z)
-        self.floorNode.addChildNode(tileNode)
+        self.floor.addChildNode(tileNode)
         tiles[String(position.x) + "," + String(position.z)] = (tileNode, isDying)
     }
     

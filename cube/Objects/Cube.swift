@@ -23,9 +23,7 @@ class Cube {
     let rotationDurationReductionFactor = 0.95
     
     let cubeNode:SCNNode
-    let cameraNode:SCNNode
-    let cameraOrigin:SCNVector3
-    let originalColour:UIColor
+    let originalColour = UIColor(red: 0.518, green:0.000, blue:0.251, alpha:1.00)
 
     let events = EventManager()
     
@@ -35,12 +33,10 @@ class Cube {
     var pendingRotations:[(x: Float, z: Float)] = []
     var position = SCNVector3.init(x: 0.0, y: 0.0, z: 0.0)
     
-    init(cubeNode: SCNNode, cameraNode: SCNNode) {
+    init(cubeNode: SCNNode) {
         print("Cube:cube init")
         self.cubeNode = cubeNode
-        self.cameraNode = cameraNode
-        self.cameraOrigin = cameraNode.position
-        self.originalColour = (self.cubeNode.geometry?.firstMaterial?.diffuse.contents)! as! UIColor
+        self.cubeNode.geometry?.firstMaterial?.diffuse.contents = self.originalColour
 
         var minVec = SCNVector3Zero
         var maxVec = SCNVector3Zero
@@ -76,7 +72,8 @@ class Cube {
                             self.finaliseRotation(0.0, zOffset: self.cubeSizeBy2 * z)
                     })
                 }
-                self.updateCameraPosition(self.cubeSizeBy2 * 2 * x, zChange: self.cubeSizeBy2 * 2 * z)
+                let movement = (xChange: self.cubeSizeBy2 * 2 * x, zChange: self.cubeSizeBy2 * 2 * z)
+                self.events.trigger("movingBy", information: movement)
                 self.events.trigger("rotatingTo", information: self.position)
             }
             else {
@@ -92,7 +89,7 @@ class Cube {
         self.resetRotation(xOffset, zOffset: zOffset)
         self.isRotating = false
 
-        let information = (self.position, self.isDying)
+        let information = (position: self.position, isDying: self.isDying)
         self.events.trigger("rotatedTo", information: information)
         
         //Check for any pending rotations that haven't been fulfilled
@@ -115,13 +112,6 @@ class Cube {
         self.cubeNode.pivot = SCNMatrix4MakeTranslation(0.0, -self.cubeSizeBy2, 0.0)
     }
     
-    func updateCameraPosition(xChange: Float, zChange: Float) {
-        print("Cube:position camera")
-        self.animateTransition({
-            self.cameraNode.position = SCNVector3Make(self.cameraNode.position.x + xChange, self.cameraNode.position.y, self.cameraNode.position.z + zChange)
-        }, animationDuration: 1.0)
-    }
-    
     func die() {
         print("Cube:dying")
         self.isDying = true;
@@ -129,49 +119,32 @@ class Cube {
         
         if (!self.isRotating) {
             print("Cube:dead")
+            self.events.trigger("died", information: nil)
             
             AudioServicesPlayAlertSound(SystemSoundID(kSystemSoundID_Vibrate))
             let duration = 2.0
             self.position = self.origin
             
             //Change colour and move back to origin
-            self.animateTransition({
+            HelperFunctions.animateTransition({
                 self.cubeNode.geometry?.firstMaterial?.diffuse.contents = UIColor.blackColor()
             }, animationDuration: duration / 2.0)
 
-            self.animateTransition({
+            HelperFunctions.animateTransition({
                 self.cubeNode.position = self.origin
-                self.cameraNode.position = self.cameraOrigin
                 }, animationDuration: duration)
             
             //Bring back to life
-            self.delayedFunctionCall(self.revive, delay: duration)
+            HelperFunctions.delayedFunctionCall(self.revive, delay: duration)
         }
     }
     
     func revive() {
         print("Cube:reviving")
         self.isDying = false
-        self.animateTransition({
+        HelperFunctions.animateTransition({
             self.cubeNode.geometry?.firstMaterial?.diffuse.contents = self.originalColour
         }, animationDuration: 1.0)
         
-    }
-    
-    
-    
-    func delayedFunctionCall(function: () -> Void, delay: Double) {
-        let runTime: dispatch_time_t = dispatch_time(DISPATCH_TIME_NOW, Int64(delay * Double(NSEC_PER_SEC)))
-        dispatch_after(runTime, dispatch_get_main_queue(), {
-            function()
-        })
-    }
-    
-    func animateTransition(function: () -> Void, animationDuration: Double) {
-        SCNTransaction.begin()
-        SCNTransaction.setAnimationDuration(animationDuration)
-        SCNTransaction.setAnimationTimingFunction(CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseOut))
-        function()
-        SCNTransaction.commit()
     }
 }
