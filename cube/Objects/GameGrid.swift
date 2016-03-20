@@ -7,6 +7,7 @@
 //
 
 import SceneKit
+import GameplayKit
 
 class GameGrid {
     
@@ -22,9 +23,11 @@ class GameGrid {
     let store = NSUserDefaults.standardUserDefaults()
     
     var score = 0.0 as Float
-    var tiles: [String:(SCNNode, Bool)] = [:]
+    var tiles: [Coordinate:(SCNNode, Bool)] = [:]
+    var daemons = Set<Daemon>()
     var lastCubePosition: SCNVector3 = SCNVector3.init(x: 0.0, y: 0.0, z: 0.0)
     var difficulty = Float(0.1)
+    var lives = 100
     
     init(floor: SCNNode, cube: Cube, hud: Hud) {
         self.floor = floor
@@ -48,7 +51,7 @@ class GameGrid {
             print("GameGrid:random number = \(random)")
             
             //We've been here before so look at what this tile held, don't recalculate it.
-            let key = String(cubePosition.x) + "," + String(cubePosition.z)
+            let key = Coordinate(cubePosition.x, cubePosition.z)
             if (self.tiles[key] != nil) {
                 if (self.tiles[key]!.1) {
                     print("GameGrid:die, die, die my darling")
@@ -90,22 +93,29 @@ class GameGrid {
     
     func addFloorTile(position: SCNVector3, isDying: Bool) {
         //Already got one
-        let key = String(position.x) + "," + String(position.z)
+        let key = Coordinate(position.x, position.z)
         if (self.tiles[key] != nil) {
             return
         }
 
-        let tile = SCNPlane(width: self.cubeSize, height: self.cubeSize)
-        tile.firstMaterial?.diffuse.contents = (isDying ? UIColor.blackColor() : self.cube.originalColour)
-        let tileNode = SCNNode(geometry: tile)
-        tileNode.eulerAngles = SCNVector3(x: GLKMathDegreesToRadians(-90), y: 0, z: 0)
-        tileNode.position = SCNVector3(x: position.x, y: epsilon, z: position.z)
-        self.floor.addChildNode(tileNode)
-        tiles[String(position.x) + "," + String(position.z)] = (tileNode, isDying)
+        if (isDying) {
+            let spawnPoint = SpawnPoint(parent: self.floor, position: SCNVector3(x: position.x, y: epsilon, z: position.z), size: self.cubeSize)
+            spawnPoint.events.listenTo("daemonCreated", action: self.addDaemon)
+            tiles[Coordinate(position.x, position.z)] = (spawnPoint, isDying)
+        } else {
+            let tile = SCNPlane(width: self.cubeSize, height: self.cubeSize)
+            tile.firstMaterial?.diffuse.contents = (isDying ? UIColor.blackColor() : self.cube.originalColour)
+            let tileNode = SCNNode(geometry: tile)
+            tileNode.eulerAngles = SCNVector3(x: GLKMathDegreesToRadians(-90), y: 0, z: 0)
+            tileNode.position = SCNVector3(x: position.x, y: epsilon, z: position.z)
+            self.floor.addChildNode(tileNode)
+            tiles[Coordinate(position.x, position.z)] = (tileNode, isDying)
+        }
+        self.generateGrid()
     }
     
     func updateScore(position: SCNVector3) {
-        let key = String(position.x) + "," + String(position.z)
+        let key = Coordinate(position.x, position.z)
         if (self.tiles[key] == nil) {
             self.score += 100.0 * self.difficulty
             self.score += 50.0 * self.difficulty * log10(sqrt(pow(self.lastCubePosition.x, 2.0) + pow(self.lastCubePosition.z, 2.0)))
@@ -119,5 +129,51 @@ class GameGrid {
             print("GameGrid:difficulty = \(newDifficulty)")
             self.difficulty = newDifficulty
         }
+    }
+    
+    func addDaemon(information:Any?) {
+        if let daemon = information as? Daemon {
+            print("GameGrid:daemon created")
+            daemons.insert(daemon)
+            daemon.events.listenTo("arrivedAtOrigin", action: self.removeDaemon)
+        }
+    }
+    
+    func removeDaemon(information:Any?) {
+        if let daemon = information as? Daemon {
+            print("GameGrid:daemon arrived at origin")
+
+            //Remove daemon
+            daemons.remove(daemon)
+            
+            //Update lives
+            self.lives -= 1
+            self.hud.updateLives(self.lives)
+        }
+    }
+    
+    func generateGrid() {
+
+        var nodes : [GKGridGraphNode] = []
+        
+        for (coordinate) in tiles.keys {
+            print("\(coordinate)")
+            let node = GKGridGraphNode(gridPosition: vector_int2(coordinate.x, coordinate.z))
+            nodes.append(node)
+        }
+        
+        let graph = GKGridGraph(nodes: nodes)
+        
+        for (node) in graph.nodes! as! [GKGridGraphNode] {
+//            graph.connectNodeToAdjacentNodes(node)
+        }
+        
+//        for (node) in nodes {
+//            let path = graph.findPathFromNode(node, toNode: graph.nodeAtGridPosition(vector_int2(0, 0))!)
+//            for (item) in path {
+//                print(item)
+//            }
+//        }
+        
     }
 }

@@ -31,7 +31,7 @@ class GameViewController: UIViewController {
         self.createCamera(scene, cube: self.cube!)
         let hud = Hud(size: self.view.bounds.size, tintColour: (self.cube?.originalColour)!)
         self.createGameGrid(scene, cube: self.cube!, hud: hud)
-        
+                
         //Create scene view
         self.sceneView = self.view as? SCNView
         self.sceneView!.scene = scene

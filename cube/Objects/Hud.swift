@@ -15,6 +15,7 @@ class Hud : SKScene {
     var score = 0
     var highScore = 0
     var scoreCard: SKLabelNode?
+    var lives: SKLabelNode?
     var tintColour = UIColor.blackColor()
     var difficulty = Float(0.1)
     
@@ -29,6 +30,7 @@ class Hud : SKScene {
         self.highScore = self.store.integerForKey("highScore")
         self.difficulty = self.store.floatForKey("difficulty")
         self.addScoreCard()
+        self.addLives()
     }
 
     required init?(coder aDecoder: NSCoder) {
@@ -53,6 +55,20 @@ class Hud : SKScene {
             self.store.synchronize()
         }
         self.scoreCard!.text = "Score: \(self.score) High score: \(self.highScore)"
+    }
+    
+    func addLives() {
+        self.lives = SKLabelNode(fontNamed: "Arial")
+        self.lives!.fontSize = 12
+        self.lives!.position = CGPointMake(CGRectGetMaxX(self.frame) - 8, CGRectGetMaxY(self.frame) - 40)
+        self.lives!.fontColor = UIColor.blackColor()
+        self.lives!.horizontalAlignmentMode = SKLabelHorizontalAlignmentMode.Right
+        self.updateLives(100)
+        self.addChild(self.lives!)
+    }
+    
+    func updateLives(lives: Int) {
+        self.lives!.text = "Lives: \(lives)"
     }
     
     override func didMoveToView(view: SKView)

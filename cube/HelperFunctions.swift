@@ -25,5 +25,12 @@ class HelperFunctions {
         function()
         SCNTransaction.commit()
     }
-    
+
+    static func animateTransition(function: () -> Void, animationDuration: Double, transition: CAMediaTimingFunction) {
+        SCNTransaction.begin()
+        SCNTransaction.setAnimationDuration(animationDuration)
+        SCNTransaction.setAnimationTimingFunction(transition)
+        function()
+        SCNTransaction.commit()
+    }
 }
