@@ -13,6 +13,7 @@
 		B03527B61C8E1F4B00565699 /* EventManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B03527B51C8E1F4B00565699 /* EventManager.swift */; };
 		B04BA77E1C9CB50E00A8BE18 /* Camera.swift in Sources */ = {isa = PBXBuildFile; fileRef = B04BA77D1C9CB50E00A8BE18 /* Camera.swift */; };
 		B04BA7801C9CC81500A8BE18 /* HelperFunctions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B04BA77F1C9CC81500A8BE18 /* HelperFunctions.swift */; };
+		B0BCCD731CA0A03E007CE489 /* SCNNodeExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0BCCD721CA0A03E007CE489 /* SCNNodeExtensions.swift */; };
 		B0D421DD1C9F38C10042BEDC /* Daemon.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0D421DC1C9F38C10042BEDC /* Daemon.swift */; };
 		B0D421DF1C9F3AC10042BEDC /* SpawnPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0D421DE1C9F3AC10042BEDC /* SpawnPoint.swift */; };
 		B0D421E11C9F58750042BEDC /* Coordinate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0D421E01C9F58750042BEDC /* Coordinate.swift */; };
@@ -50,6 +51,7 @@
 		B03527B51C8E1F4B00565699 /* EventManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = EventManager.swift; path = Infrastructure/EventManager.swift; sourceTree = "<group>"; };
 		B04BA77D1C9CB50E00A8BE18 /* Camera.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Camera.swift; sourceTree = "<group>"; };
 		B04BA77F1C9CC81500A8BE18 /* HelperFunctions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HelperFunctions.swift; sourceTree = "<group>"; };
+		B0BCCD721CA0A03E007CE489 /* SCNNodeExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SCNNodeExtensions.swift; sourceTree = "<group>"; };
 		B0D421DC1C9F38C10042BEDC /* Daemon.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Daemon.swift; sourceTree = "<group>"; };
 		B0D421DE1C9F3AC10042BEDC /* SpawnPoint.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpawnPoint.swift; sourceTree = "<group>"; };
 		B0D421E01C9F58750042BEDC /* Coordinate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Coordinate.swift; sourceTree = "<group>"; };
@@ -113,6 +115,7 @@
 				B03527B51C8E1F4B00565699 /* EventManager.swift */,
 				B04BA77F1C9CC81500A8BE18 /* HelperFunctions.swift */,
 				B0D421E01C9F58750042BEDC /* Coordinate.swift */,
+				B0BCCD721CA0A03E007CE489 /* SCNNodeExtensions.swift */,
 			);
 			name = Infrastructure;
 			sourceTree = "<group>";
@@ -307,6 +310,7 @@
 				B04BA7801C9CC81500A8BE18 /* HelperFunctions.swift in Sources */,
 				B03527B21C8E1F3B00565699 /* Cube.swift in Sources */,
 				B03527B31C8E1F3B00565699 /* GameGrid.swift in Sources */,
+				B0BCCD731CA0A03E007CE489 /* SCNNodeExtensions.swift in Sources */,
 				B0D421DF1C9F3AC10042BEDC /* SpawnPoint.swift in Sources */,
 				B0D421E11C9F58750042BEDC /* Coordinate.swift in Sources */,
 				B0F64BCB1BC7010B007D40A8 /* GameViewController.swift in Sources */,
@@ -458,12 +462,14 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = cube/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				"OTHER_SWIFT_FLAGS[arch=*]" = "-D DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = com.filmstarr.cube;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
@@ -474,10 +480,12 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = cube/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.filmstarr.cube;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};

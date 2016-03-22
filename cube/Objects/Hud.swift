@@ -63,7 +63,6 @@ class Hud : SKScene {
         self.lives!.position = CGPointMake(CGRectGetMaxX(self.frame) - 8, CGRectGetMaxY(self.frame) - 40)
         self.lives!.fontColor = UIColor.blackColor()
         self.lives!.horizontalAlignmentMode = SKLabelHorizontalAlignmentMode.Right
-        self.updateLives(100)
         self.addChild(self.lives!)
     }
     

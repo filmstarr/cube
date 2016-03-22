@@ -12,8 +12,8 @@ import GameplayKit
 class GameGrid {
     
     let πBy2 = Float(M_PI_2)
-    let xAxis = SCNVector3.init(x: 1.0, y: 0.0, z: 0.0)
-    let zAxis = SCNVector3.init(x: 0.0, y: 0.0, z: 1.0)
+    let xAxis = SCNVector3(1.0, 0.0, 0.0)
+    let zAxis = SCNVector3(0.0, 0.0, 1.0)
     let cubeSize:CGFloat
     let epsilon = 0.001 as Float
 
@@ -25,9 +25,14 @@ class GameGrid {
     var score = 0.0 as Float
     var tiles: [Coordinate:(SCNNode, Bool)] = [:]
     var daemons = Set<Daemon>()
-    var lastCubePosition: SCNVector3 = SCNVector3.init(x: 0.0, y: 0.0, z: 0.0)
+    var lastCubePosition: SCNVector3 = SCNVector3(0.0, 0.0, 0.0)
     var difficulty = Float(0.1)
     var lives = 100
+    
+    var xMin = 0 as Int32
+    var xMax = 0 as Int32
+    var zMin = 0 as Int32
+    var zMax = 0 as Int32
     
     init(floor: SCNNode, cube: Cube, hud: Hud) {
         self.floor = floor
@@ -36,6 +41,7 @@ class GameGrid {
         self.cubeSize = CGFloat(self.cube.cubeSizeBy2) * 2
         self.difficulty = self.store.floatForKey("difficulty")
         self.addFloorTile(lastCubePosition, isDying: false)
+        self.hud.updateLives(self.lives)
         
         self.cube.events.listenTo("rotatingTo", action: self.cubeRotatingTo)
         self.cube.events.listenTo("rotatedTo", action: self.cubeRotatedTo)
@@ -55,7 +61,7 @@ class GameGrid {
             if (self.tiles[key] != nil) {
                 if (self.tiles[key]!.1) {
                     print("GameGrid:die, die, die my darling")
-                    self.lastCubePosition = SCNVector3.init(x: 0.0, y: 0.0, z: 0.0)
+                    self.lastCubePosition = SCNVector3(0.0, 0.0, 0.0)
                     self.cube.die()
                 } else {
                     self.updateScore(cubePosition)
@@ -67,7 +73,7 @@ class GameGrid {
             let distanceFromHome = sqrt(pow(self.lastCubePosition.x, 2.0) + pow(self.lastCubePosition.z, 2.0))
             if (distanceFromHome > 3 && random > Double(1.0 - self.difficulty) && !(cubePosition.x == 0.0 && cubePosition.z == 0.0)) {
                 print("GameGrid:die, die, die my darling")
-                self.lastCubePosition = SCNVector3.init(x: 0.0, y: 0.0, z: 0.0)
+                self.lastCubePosition = SCNVector3(0.0, 0.0, 0.0)
                 self.cube.die()
             } else {
                 self.updateScore(cubePosition)
@@ -106,12 +112,32 @@ class GameGrid {
             let tile = SCNPlane(width: self.cubeSize, height: self.cubeSize)
             tile.firstMaterial?.diffuse.contents = (isDying ? UIColor.blackColor() : self.cube.originalColour)
             let tileNode = SCNNode(geometry: tile)
-            tileNode.eulerAngles = SCNVector3(x: GLKMathDegreesToRadians(-90), y: 0, z: 0)
-            tileNode.position = SCNVector3(x: position.x, y: epsilon, z: position.z)
+            tileNode.eulerAngles = SCNVector3(GLKMathDegreesToRadians(-90), 0, 0)
+            tileNode.position = SCNVector3(position.x, epsilon, position.z)
             self.floor.addChildNode(tileNode)
             tiles[Coordinate(position.x, position.z)] = (tileNode, isDying)
         }
-        self.generateGrid()
+        
+        self.updateBounds(position)
+        //self.generateGrid()
+    }
+    
+    func updateBounds(position: SCNVector3) {
+        let x = Int32(position.x)
+        let z = Int32(position.z)
+        
+        if (x > self.xMax) {
+            self.xMax = x
+        }
+        if (x < self.xMin) {
+            self.xMin = x
+        }
+        if (z > self.zMax) {
+            self.zMax = z
+        }
+        if (z < self.zMin) {
+            self.zMin = z
+        }
     }
     
     func updateScore(position: SCNVector3) {
@@ -136,6 +162,7 @@ class GameGrid {
             print("GameGrid:daemon created")
             daemons.insert(daemon)
             daemon.events.listenTo("arrivedAtOrigin", action: self.removeDaemon)
+            self.generateGrid()
         }
     }
     
@@ -153,27 +180,28 @@ class GameGrid {
     }
     
     func generateGrid() {
-
-        var nodes : [GKGridGraphNode] = []
         
-        for (coordinate) in tiles.keys {
-            print("\(coordinate)")
-            let node = GKGridGraphNode(gridPosition: vector_int2(coordinate.x, coordinate.z))
-            nodes.append(node)
+        let graph = GKGridGraph(fromGridStartingAt: int2(self.xMin, self.zMin), width: 1 + self.xMax - self.xMin, height: 1 + self.zMax - self.zMin, diagonalsAllowed: false)
+        
+        var missingNodes : [GKGridGraphNode] = []
+        for x in self.xMin...self.xMax {
+            for z in self.zMin...self.zMax {
+                if !tiles.keys.contains(Coordinate(x, z)) {
+                    missingNodes.append(graph.nodeAtGridPosition(int2(x, z))!)
+                }
+            }
         }
+        graph.removeNodes(missingNodes)
         
-        let graph = GKGridGraph(nodes: nodes)
+        var route = graph.findPathFromNode(graph.nodeAtGridPosition(int2(Int32(7), Int32(-2)))!, toNode: graph.nodeAtGridPosition(int2(0, 0))!) as! [GKGridGraphNode]
         
-        for (node) in graph.nodes! as! [GKGridGraphNode] {
-//            graph.connectNodeToAdjacentNodes(node)
+        if route.count > 1 {
+            route.removeAtIndex(0)
+            while (route.count != 0) {
+                let nextNode = route.removeAtIndex(0)
+                
+                print("x=\(nextNode.gridPosition.x), z=\(nextNode.gridPosition.y)")
+            }
         }
-        
-//        for (node) in nodes {
-//            let path = graph.findPathFromNode(node, toNode: graph.nodeAtGridPosition(vector_int2(0, 0))!)
-//            for (item) in path {
-//                print(item)
-//            }
-//        }
-        
     }
 }

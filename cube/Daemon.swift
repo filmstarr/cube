@@ -33,15 +33,16 @@ class Daemon : SCNNode {
     }
     
     func updateCourse() {
-        HelperFunctions.animateTransition({
-            self.position = SCNVector3(0.0, self.radius, 0.0)
-            }, animationDuration: 10, transition: CAMediaTimingFunction(name: kCAMediaTimingFunctionLinear))
+        self.moveTo(SCNVector3(0.0, self.radius, 0.0), duration: 10.0)
         
-        HelperFunctions.delayedFunctionCall({
-            print("Daemon:arrived at origin")
-            self.events.trigger("arrivedAtOrigin", information: self)
-            self.destroy()
-            }, delay: 10)
+        let timer = NSTimer(timeInterval: 10.0, target: self, selector: "arrivedAtOrigin", userInfo: nil, repeats: false)
+        NSRunLoop.mainRunLoop().addTimer(timer, forMode: NSRunLoopCommonModes)
+    }
+    
+    dynamic func arrivedAtOrigin() {
+        print("Daemon:arrived at origin")
+        self.events.trigger("arrivedAtOrigin", information: self)
+        self.destroy()
     }
 
     func destroy() {

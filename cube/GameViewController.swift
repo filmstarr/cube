@@ -14,7 +14,7 @@ import Darwin
 class GameViewController: UIViewController {
     
     let π = M_PI
-    let xAxis = SCNVector3.init(x: 1, y: 0, z: 0)
+    let xAxis = SCNVector3(1, 0, 0)
     
     var sceneView:SCNView?
     var cube:Cube?
@@ -52,7 +52,7 @@ class GameViewController: UIViewController {
         lightNode.light = SCNLight()
         lightNode.light!.type = SCNLightTypeDirectional
         lightNode.runAction(SCNAction.rotateByAngle(CGFloat(-π/2), aroundAxis: xAxis, duration: 0.0))
-        lightNode.position = SCNVector3(x: 0, y: 30, z: 0)
+        lightNode.position = SCNVector3(0, 30, 0)
         scene.rootNode.addChildNode(lightNode)
         
         //Create and add an ambient light to the scene

@@ -17,9 +17,9 @@ class Cube {
     
     let πBy2 = Float(M_PI_2)
     let cubeSizeBy2:Float
-    let xAxis = SCNVector3.init(x: 1.0, y: 0.0, z: 0.0)
-    let zAxis = SCNVector3.init(x: 0.0, y: 0.0, z: 1.0)
-    let origin = SCNVector3.init(x: 0.0, y: 0.0, z: 0.0)
+    let xAxis = SCNVector3(1.0, 0.0, 0.0)
+    let zAxis = SCNVector3(0.0, 0.0, 1.0)
+    let origin = SCNVector3(0.0, 0.0, 0.0)
     let rotationDurationReductionFactor = 0.95
     
     let cubeNode:SCNNode
@@ -31,7 +31,7 @@ class Cube {
     var isRotating = false
     var isDying = false
     var pendingRotations:[(x: Float, z: Float)] = []
-    var position = SCNVector3.init(x: 0.0, y: 0.0, z: 0.0)
+    var position = SCNVector3(0.0, 0.0, 0.0)
     
     init(cubeNode: SCNNode) {
         print("Cube:cube init")
@@ -128,18 +128,19 @@ class Cube {
             //Change colour and move back to origin
             HelperFunctions.animateTransition({
                 self.cubeNode.geometry?.firstMaterial?.diffuse.contents = UIColor.blackColor()
-            }, animationDuration: duration / 2.0)
-
-            HelperFunctions.animateTransition({
-                self.cubeNode.position = self.origin
-                }, animationDuration: duration)
+            }, animationDuration: duration / 2.0)            
+            self.cubeNode.moveTo(self.origin, duration: duration, timingMode: SCNActionTimingMode.EaseOut)
             
             //Bring back to life
-            HelperFunctions.delayedFunctionCall(self.revive, delay: duration)
+//            HelperFunctions.delayedFunctionCall(self.revive, delay: duration)
+            
+            let timer = NSTimer(timeInterval: duration, target: self, selector: "revive", userInfo: nil, repeats: false)
+            NSRunLoop.mainRunLoop().addTimer(timer, forMode: NSRunLoopCommonModes)
+            
         }
     }
     
-    func revive() {
+    dynamic func revive() {
         print("Cube:reviving")
         self.isDying = false
         HelperFunctions.animateTransition({

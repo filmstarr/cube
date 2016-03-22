@@ -22,7 +22,7 @@ class SpawnPoint : SCNNode {
         let tile = SCNPlane(width: size, height: size)
         tile.firstMaterial?.diffuse.contents = UIColor.blackColor()
         self.geometry = tile
-        self.eulerAngles = SCNVector3(x: GLKMathDegreesToRadians(-90), y: 0, z: 0)
+        self.eulerAngles = SCNVector3(GLKMathDegreesToRadians(-90), 0, 0)
         self.position = position
 
         parent.addChildNode(self)
