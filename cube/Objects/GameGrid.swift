@@ -14,20 +14,21 @@ class GameGrid {
     let πBy2 = Float(M_PI_2)
     let xAxis = SCNVector3(1.0, 0.0, 0.0)
     let zAxis = SCNVector3(0.0, 0.0, 1.0)
-    let cubeSize:CGFloat
+    let cubeSize: CGFloat
     let epsilon = 0.001 as Float
 
-    let floor:SCNNode
-    let cube:Cube
-    let hud:Hud
+    let floor: SCNNode
+    let cube: Cube
+    let hud: Hud
     let store = NSUserDefaults.standardUserDefaults()
     
     var score = 0.0 as Float
-    var tiles: [Coordinate:(SCNNode, Bool)] = [:]
+    var tiles: [Coordinate: (SCNNode, Bool)] = [:]
     var daemons = Set<Daemon>()
     var lastCubePosition: SCNVector3 = SCNVector3(0.0, 0.0, 0.0)
     var difficulty = Float(0.1)
     var lives = 100
+    var gridGraph = GKGridGraph()
     
     var xMin = 0 as Int32
     var xMax = 0 as Int32
@@ -119,7 +120,7 @@ class GameGrid {
         }
         
         self.updateBounds(position)
-        //self.generateGrid()
+        self.updateGridGraph()
     }
     
     func updateBounds(position: SCNVector3) {
@@ -160,9 +161,9 @@ class GameGrid {
     func addDaemon(information:Any?) {
         if let daemon = information as? Daemon {
             print("GameGrid:daemon created")
+            daemon.updateRoute(self.gridGraph)
             daemons.insert(daemon)
             daemon.events.listenTo("arrivedAtOrigin", action: self.removeDaemon)
-            self.generateGrid()
         }
     }
     
@@ -179,29 +180,21 @@ class GameGrid {
         }
     }
     
-    func generateGrid() {
-        
-        let graph = GKGridGraph(fromGridStartingAt: int2(self.xMin, self.zMin), width: 1 + self.xMax - self.xMin, height: 1 + self.zMax - self.zMin, diagonalsAllowed: false)
+    func updateGridGraph() {
+        self.gridGraph = GKGridGraph(fromGridStartingAt: int2(self.xMin, self.zMin), width: 1 + self.xMax - self.xMin, height: 1 + self.zMax - self.zMin, diagonalsAllowed: false)
         
         var missingNodes : [GKGridGraphNode] = []
         for x in self.xMin...self.xMax {
             for z in self.zMin...self.zMax {
                 if !tiles.keys.contains(Coordinate(x, z)) {
-                    missingNodes.append(graph.nodeAtGridPosition(int2(x, z))!)
+                    missingNodes.append(self.gridGraph.nodeAtGridPosition(int2(x, z))!)
                 }
             }
         }
-        graph.removeNodes(missingNodes)
+        self.gridGraph.removeNodes(missingNodes)
         
-        var route = graph.findPathFromNode(graph.nodeAtGridPosition(int2(Int32(7), Int32(-2)))!, toNode: graph.nodeAtGridPosition(int2(0, 0))!) as! [GKGridGraphNode]
-        
-        if route.count > 1 {
-            route.removeAtIndex(0)
-            while (route.count != 0) {
-                let nextNode = route.removeAtIndex(0)
-                
-                print("x=\(nextNode.gridPosition.x), z=\(nextNode.gridPosition.y)")
-            }
+        for daemon in daemons {
+            daemon.updateRoute(self.gridGraph)
         }
     }
 }

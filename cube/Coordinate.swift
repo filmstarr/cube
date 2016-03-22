@@ -8,7 +8,7 @@
 
 import Foundation
 
-struct Coordinate : Hashable {
+struct Coordinate: Hashable {
     let x: Int32
     let z: Int32
     

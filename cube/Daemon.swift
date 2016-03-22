@@ -8,12 +8,16 @@
 
 import Foundation
 import SceneKit
+import GameplayKit
 
-class Daemon : SCNNode {
+class Daemon: SCNNode {
     
     let events = EventManager()
     let radius = CGFloat(0.20)
     let speed = 1.0
+    
+    var route: [GKGridGraphNode] = []
+    var isMoving = false
     
     init(parent: SCNNode, position: SCNVector3) {
         super.init()
@@ -25,21 +29,35 @@ class Daemon : SCNNode {
         self.geometry = shape
         
         parent.addChildNode(self)
-        self.updateCourse()
     }
     
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
     }
     
-    func updateCourse() {
-        self.moveTo(SCNVector3(0.0, self.radius, 0.0), duration: 10.0)
+    func updateRoute(gridGraph: GKGridGraph) {
+        self.route = gridGraph.findPathFromNode(gridGraph.nodeAtGridPosition(int2(Int32(self.position.x), Int32(self.position.z)))!, toNode: gridGraph.nodeAtGridPosition(int2(0, 0))!) as! [GKGridGraphNode]
         
-        let timer = NSTimer(timeInterval: 10.0, target: self, selector: #selector(Daemon.arrivedAtOrigin), userInfo: nil, repeats: false)
-        NSRunLoop.mainRunLoop().addTimer(timer, forMode: NSRunLoopCommonModes)
+        if route.count > 0 {
+            route.removeAtIndex(0)
+        }
+        
+        if (!self.isMoving) {
+            self.isMoving = true
+            moveToNextPointOnRoute()            
+        }
     }
     
-    dynamic func arrivedAtOrigin() {
+    func moveToNextPointOnRoute() {
+        if route.count > 0 {
+            let nextNode = route.removeAtIndex(0)
+            self.moveTo(SCNVector3(CGFloat(nextNode.gridPosition.x), self.radius, CGFloat(nextNode.gridPosition.y)), duration: 1.0, completionHandler: { self.moveToNextPointOnRoute() })
+        } else {
+            self.arrivedAtOrigin()
+        }
+    }
+    
+    func arrivedAtOrigin() {
         print("Daemon:arrived at origin")
         self.events.trigger("arrivedAtOrigin", information: self)
         self.destroy()

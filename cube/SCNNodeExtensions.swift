@@ -21,4 +21,9 @@ extension SCNNode {
         action.timingMode = timingMode
         self.runAction(action)
     }
+    
+    func moveTo(position: SCNVector3, duration: Double, completionHandler: () -> Void) {
+        let action = SCNAction.moveTo(position, duration: duration)
+        self.runAction(action, completionHandler: completionHandler)
+    }
 }

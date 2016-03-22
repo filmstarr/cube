@@ -10,7 +10,7 @@ import Foundation
 import SceneKit
 import SpriteKit
 
-class Camera : SCNNode {
+class Camera: SCNNode {
 
     let π = M_PI
     let xAxis = SCNVector3(1.0, 0.0, 0.0)

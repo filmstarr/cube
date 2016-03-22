@@ -10,7 +10,7 @@ import Foundation
 import SceneKit
 import SpriteKit
 
-class Hud : SKScene {
+class Hud: SKScene {
     
     var score = 0
     var highScore = 0

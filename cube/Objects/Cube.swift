@@ -16,13 +16,13 @@ import AudioToolbox
 class Cube {
     
     let πBy2 = Float(M_PI_2)
-    let cubeSizeBy2:Float
+    let cubeSizeBy2: Float
     let xAxis = SCNVector3(1.0, 0.0, 0.0)
     let zAxis = SCNVector3(0.0, 0.0, 1.0)
     let origin = SCNVector3(0.0, 0.0, 0.0)
     let rotationDurationReductionFactor = 0.95
     
-    let cubeNode:SCNNode
+    let cubeNode: SCNNode
     let originalColour = UIColor(red: 0.518, green:0.000, blue:0.251, alpha:1.00)
 
     let events = EventManager()
@@ -30,7 +30,7 @@ class Cube {
     var rotationDuration = 0.25
     var isRotating = false
     var isDying = false
-    var pendingRotations:[(x: Float, z: Float)] = []
+    var pendingRotations: [(x: Float, z: Float)] = []
     var position = SCNVector3(0.0, 0.0, 0.0)
     
     init(cubeNode: SCNNode) {
