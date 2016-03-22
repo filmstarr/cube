@@ -27,7 +27,7 @@ class SpawnPoint : SCNNode {
 
         parent.addChildNode(self)
 
-        let timer = NSTimer(timeInterval: 5.0, target: self, selector: "spawn", userInfo: nil, repeats: true)
+        let timer = NSTimer(timeInterval: 5.0, target: self, selector: #selector(SpawnPoint.spawn), userInfo: nil, repeats: true)
         NSRunLoop.mainRunLoop().addTimer(timer, forMode: NSRunLoopCommonModes)
     }
 

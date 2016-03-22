@@ -35,7 +35,7 @@ class Daemon : SCNNode {
     func updateCourse() {
         self.moveTo(SCNVector3(0.0, self.radius, 0.0), duration: 10.0)
         
-        let timer = NSTimer(timeInterval: 10.0, target: self, selector: "arrivedAtOrigin", userInfo: nil, repeats: false)
+        let timer = NSTimer(timeInterval: 10.0, target: self, selector: #selector(Daemon.arrivedAtOrigin), userInfo: nil, repeats: false)
         NSRunLoop.mainRunLoop().addTimer(timer, forMode: NSRunLoopCommonModes)
     }
     

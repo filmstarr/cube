@@ -50,29 +50,29 @@ class Cube {
         self.resetRotation(0.0, zOffset: 0.0)
     }
     
-    func rotate(var x: Float, var z: Float) {
+    func rotate(x: Float, z: Float) {
         if (!self.isDying) {
             if (!self.isRotating) {
                 print("Cube:rotate cube")
                 self.isRotating = true
                 let currentPosition = self.cubeNode.position
-                x = sign(x)
-                z = sign(z)
+                let xSign = sign(x)
+                let zSign = sign(z)
 
-                self.cubeNode.pivot = SCNMatrix4MakeTranslation(self.cubeSizeBy2 * x, -self.cubeSizeBy2, self.cubeSizeBy2 * z)
-                self.cubeNode.position = SCNVector3(currentPosition.x + (self.cubeSizeBy2 * x), 0.0, currentPosition.z + (self.cubeSizeBy2 * z))
-                self.position = SCNVector3(self.position.x + x, 0.0, self.position.z + z)
-                if (x != 0.0) {
-                    self.cubeNode.runAction(SCNAction.rotateByAngle(CGFloat(-πBy2 * x), aroundAxis: zAxis, duration: self.rotationDuration), completionHandler:{param in
-                            self.finaliseRotation(self.cubeSizeBy2 * x, zOffset: 0.0)
+                self.cubeNode.pivot = SCNMatrix4MakeTranslation(self.cubeSizeBy2 * xSign, -self.cubeSizeBy2, self.cubeSizeBy2 * zSign)
+                self.cubeNode.position = SCNVector3(currentPosition.x + (self.cubeSizeBy2 * xSign), 0.0, currentPosition.z + (self.cubeSizeBy2 * zSign))
+                self.position = SCNVector3(self.position.x + xSign, 0.0, self.position.z + zSign)
+                if (xSign != 0.0) {
+                    self.cubeNode.runAction(SCNAction.rotateByAngle(CGFloat(-πBy2 * xSign), aroundAxis: zAxis, duration: self.rotationDuration), completionHandler:{param in
+                            self.finaliseRotation(self.cubeSizeBy2 * xSign, zOffset: 0.0)
                     })
                 }
-                if (z != 0.0) {
-                    self.cubeNode.runAction(SCNAction.rotateByAngle(CGFloat(πBy2 * z), aroundAxis: xAxis, duration: self.rotationDuration), completionHandler:{param in
-                            self.finaliseRotation(0.0, zOffset: self.cubeSizeBy2 * z)
+                if (zSign != 0.0) {
+                    self.cubeNode.runAction(SCNAction.rotateByAngle(CGFloat(πBy2 * zSign), aroundAxis: xAxis, duration: self.rotationDuration), completionHandler:{param in
+                            self.finaliseRotation(0.0, zOffset: self.cubeSizeBy2 * zSign)
                     })
                 }
-                let movement = (xChange: self.cubeSizeBy2 * 2 * x, zChange: self.cubeSizeBy2 * 2 * z)
+                let movement = (xChange: self.cubeSizeBy2 * 2 * xSign, zChange: self.cubeSizeBy2 * 2 * zSign)
                 self.events.trigger("movingBy", information: movement)
                 self.events.trigger("rotatingTo", information: self.position)
             }
@@ -132,9 +132,7 @@ class Cube {
             self.cubeNode.moveTo(self.origin, duration: duration, timingMode: SCNActionTimingMode.EaseOut)
             
             //Bring back to life
-//            HelperFunctions.delayedFunctionCall(self.revive, delay: duration)
-            
-            let timer = NSTimer(timeInterval: duration, target: self, selector: "revive", userInfo: nil, repeats: false)
+            let timer = NSTimer(timeInterval: duration, target: self, selector: #selector(Cube.revive), userInfo: nil, repeats: false)
             NSRunLoop.mainRunLoop().addTimer(timer, forMode: NSRunLoopCommonModes)
             
         }

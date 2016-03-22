@@ -80,23 +80,23 @@ class GameViewController: UIViewController {
     
     func registerGestures() {
         //ToDo: Double tap to enter camera mode (raise and centre camera), single finger pan, pinch zoom, double tap to re-position camera and exit camera mode.
-        let doubleTap = UITapGestureRecognizer(target: self, action: "handleDoubleTap:")
+        let doubleTap = UITapGestureRecognizer(target: self, action: #selector(GameViewController.handleDoubleTap(_:)))
         doubleTap.numberOfTouchesRequired = 2
         self.sceneView!.addGestureRecognizer(doubleTap)
         
-        let swipeRight = UISwipeGestureRecognizer(target: self, action: "handleSwipe:")
+        let swipeRight = UISwipeGestureRecognizer(target: self, action: #selector(GameViewController.handleSwipe(_:)))
         swipeRight.direction = .Right
         self.sceneView!.addGestureRecognizer(swipeRight)
         
-        let swipeLeft = UISwipeGestureRecognizer(target: self, action: "handleSwipe:")
+        let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(GameViewController.handleSwipe(_:)))
         swipeLeft.direction = .Left
         self.sceneView!.addGestureRecognizer(swipeLeft)
         
-        let swipeUp = UISwipeGestureRecognizer(target: self, action: "handleSwipe:")
+        let swipeUp = UISwipeGestureRecognizer(target: self, action: #selector(GameViewController.handleSwipe(_:)))
         swipeUp.direction = .Up
         self.sceneView!.addGestureRecognizer(swipeUp)
         
-        let swipeDown = UISwipeGestureRecognizer(target: self, action: "handleSwipe:")
+        let swipeDown = UISwipeGestureRecognizer(target: self, action: #selector(GameViewController.handleSwipe(_:)))
         swipeDown.direction = .Down
         self.sceneView!.addGestureRecognizer(swipeDown)
     }

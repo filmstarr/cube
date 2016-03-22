@@ -89,7 +89,7 @@ class Hud : SKScene {
         difficultySlider.continuous = false
         difficultySlider.tintColor = self.tintColour
         difficultySlider.value = self.difficulty
-        difficultySlider.addTarget(self, action: "updateDifficulty:", forControlEvents: .ValueChanged)
+        difficultySlider.addTarget(self, action: #selector(Hud.updateDifficulty(_:)), forControlEvents: .ValueChanged)
         difficultySlider.center = CGPointMake((CGRectGetMaxX(difficultyLabel.frame) / 2) + 2, CGRectGetMaxY(self.frame) / 2)
         difficultySlider.transform = CGAffineTransformMakeRotation(CGFloat(-M_PI_2))
         self.view?.addSubview(difficultySlider)
