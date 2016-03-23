@@ -16,6 +16,7 @@ class GameGrid {
     let zAxis = SCNVector3(0.0, 0.0, 1.0)
     let cubeSize: CGFloat
     let epsilon = 0.001 as Float
+    let originColour = UIColor(red: 0.0, green:0.302, blue:0.071, alpha:1.00)
 
     let floor: SCNNode
     let cube: Cube
@@ -41,7 +42,8 @@ class GameGrid {
         self.cube = cube
         self.cubeSize = CGFloat(self.cube.cubeSizeBy2) * 2
         self.difficulty = self.store.floatForKey("difficulty")
-        self.addFloorTile(lastCubePosition, isDying: false)
+        self.addFloorTile(lastCubePosition, isDying: false, tileColour: self.originColour)
+        
         self.hud.updateLives(self.lives)
         
         self.cube.events.listenTo("rotatingTo", action: self.cubeRotatingTo)
@@ -97,8 +99,12 @@ class GameGrid {
         let rand = drand48()
         return rand
     }
-    
+
     func addFloorTile(position: SCNVector3, isDying: Bool) {
+        self.addFloorTile(position, isDying: isDying, tileColour: (isDying ? UIColor.blackColor() : self.cube.originalColour))
+    }
+    
+    func addFloorTile(position: SCNVector3, isDying: Bool, tileColour: UIColor) {
         //Already got one
         let key = Coordinate(position.x, position.z)
         if (self.tiles[key] != nil) {
@@ -111,7 +117,7 @@ class GameGrid {
             tiles[Coordinate(position.x, position.z)] = (spawnPoint, isDying)
         } else {
             let tile = SCNPlane(width: self.cubeSize, height: self.cubeSize)
-            tile.firstMaterial?.diffuse.contents = (isDying ? UIColor.blackColor() : self.cube.originalColour)
+            tile.firstMaterial?.diffuse.contents = tileColour
             let tileNode = SCNNode(geometry: tile)
             tileNode.eulerAngles = SCNVector3(GLKMathDegreesToRadians(-90), 0, 0)
             tileNode.position = SCNVector3(position.x, epsilon, position.z)
@@ -177,7 +183,23 @@ class GameGrid {
             //Update lives
             self.lives -= 1
             self.hud.updateLives(self.lives)
+            
+            //Flash the origin black when we lose a life
+            let originTile = tiles[Coordinate(0.0, 0.0)]!.0
+            HelperFunctions.animateTransition({
+                originTile.geometry?.firstMaterial?.diffuse.contents = UIColor.blackColor()
+                }, animationDuration: 0.3)
+            
+            let timer = NSTimer(timeInterval: 0.3, target: self, selector: #selector(GameGrid.restoreOriginColour), userInfo: nil, repeats: false)
+            NSRunLoop.mainRunLoop().addTimer(timer, forMode: NSRunLoopCommonModes)
         }
+    }
+    
+    dynamic func restoreOriginColour() {
+        let originTile = tiles[Coordinate(0.0, 0.0)]!.0
+        HelperFunctions.animateTransition({
+            originTile.geometry?.firstMaterial?.diffuse.contents = self.originColour
+            }, animationDuration: 0.5)
     }
     
     func updateGridGraph() {

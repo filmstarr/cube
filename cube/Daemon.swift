@@ -36,6 +36,7 @@ class Daemon: SCNNode {
     }
     
     func updateRoute(gridGraph: GKGridGraph) {
+        print("Daemon:position = x: \(self.position.x), z: \(self.position.z)")
         self.route = gridGraph.findPathFromNode(gridGraph.nodeAtGridPosition(int2(Int32(self.position.x), Int32(self.position.z)))!, toNode: gridGraph.nodeAtGridPosition(int2(0, 0))!) as! [GKGridGraphNode]
         
         if route.count > 0 {
