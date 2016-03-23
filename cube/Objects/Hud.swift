@@ -49,7 +49,7 @@ class Hud: SKScene {
     
     func updateScoreCard(score: Int) {
         self.score = score
-        if (self.score > self.highScore) {
+        if self.score > self.highScore {
             self.highScore = self.score
             self.store.setValue(self.highScore, forKey: "highScore")
             self.store.synchronize()

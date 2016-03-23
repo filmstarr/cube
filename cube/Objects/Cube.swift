@@ -51,8 +51,8 @@ class Cube {
     }
     
     func rotate(x: Float, z: Float) {
-        if (!self.isDying) {
-            if (!self.isRotating) {
+        if !self.isDying {
+            if !self.isRotating {
                 print("Cube:rotate cube")
                 self.isRotating = true
                 let currentPosition = self.cubeNode.position
@@ -62,12 +62,12 @@ class Cube {
                 self.cubeNode.pivot = SCNMatrix4MakeTranslation(self.cubeSizeBy2 * xSign, -self.cubeSizeBy2, self.cubeSizeBy2 * zSign)
                 self.cubeNode.position = SCNVector3(currentPosition.x + (self.cubeSizeBy2 * xSign), 0.0, currentPosition.z + (self.cubeSizeBy2 * zSign))
                 self.position = SCNVector3(self.position.x + xSign, 0.0, self.position.z + zSign)
-                if (xSign != 0.0) {
+                if xSign != 0.0 {
                     self.cubeNode.runAction(SCNAction.rotateByAngle(CGFloat(-πBy2 * xSign), aroundAxis: zAxis, duration: self.rotationDuration), completionHandler:{param in
                             self.finaliseRotation(self.cubeSizeBy2 * xSign, zOffset: 0.0)
                     })
                 }
-                if (zSign != 0.0) {
+                if zSign != 0.0 {
                     self.cubeNode.runAction(SCNAction.rotateByAngle(CGFloat(πBy2 * zSign), aroundAxis: xAxis, duration: self.rotationDuration), completionHandler:{param in
                             self.finaliseRotation(0.0, zOffset: self.cubeSizeBy2 * zSign)
                     })
@@ -93,10 +93,10 @@ class Cube {
         self.events.trigger("rotatedTo", information: information)
         
         //Check for any pending rotations that haven't been fulfilled
-        if (self.isDying) {
+        if self.isDying {
             self.die()
         }
-        else if (self.pendingRotations.count != 0) {
+        else if self.pendingRotations.count != 0 {
             let rotation = self.pendingRotations[0]
             self.pendingRotations.removeAtIndex(0)
             self.rotate(rotation.x, z: rotation.z)
@@ -117,7 +117,7 @@ class Cube {
         self.isDying = true;
         self.pendingRotations.removeAll()
         
-        if (!self.isRotating) {
+        if !self.isRotating {
             print("Cube:dead")
             self.events.trigger("died", information: nil)
             

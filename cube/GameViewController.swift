@@ -103,7 +103,7 @@ class GameViewController: UIViewController {
     
     func handleDoubleTap(gestureRecognize: UIGestureRecognizer) {
         print("GameViewController:handle double tap")
-        if (gestureRecognize as? UITapGestureRecognizer != nil) {
+        if gestureRecognize as? UITapGestureRecognizer != nil {
             let scnView = self.view as! SCNView
             scnView.allowsCameraControl = !scnView.allowsCameraControl
         }

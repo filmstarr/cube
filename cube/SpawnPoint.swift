@@ -8,14 +8,20 @@
 
 import Foundation
 import SceneKit
+import GameplayKit
 
 class SpawnPoint: SCNNode {
     
-    let parent: SCNNode
     let events = EventManager()
+
+    var parent = SCNNode()
+    var spawnPointNode = GKGraphNode2D()
+    var originNode = GKGraphNode2D()
     
-    init(parent: SCNNode, position: SCNVector3, size: CGFloat) {
+    init(parent: SCNNode, position: SCNVector3, size: CGFloat, spawnPointNode: GKGraphNode2D, originNode: GKGraphNode2D) {
         self.parent = parent
+        self.spawnPointNode = spawnPointNode
+        self.originNode = originNode
 
         super.init()
         
@@ -32,11 +38,11 @@ class SpawnPoint: SCNNode {
     }
 
     required init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        super.init(coder: aDecoder)
     }
     
     func spawn() {
-        let daemon = Daemon(parent: self.parent, position: self.position)
+        let daemon = Daemon(parent: self.parent, position: self.position, initialNode: self.spawnPointNode, destinationNode: self.originNode)
         print("SpawnPoint:daemon created")
         self.events.trigger("daemonCreated", information: daemon)
     }

@@ -16,10 +16,15 @@ class Daemon: SCNNode {
     let radius = CGFloat(0.20)
     let speed = 1.0
     
-    var route: [GKGridGraphNode] = []
+    var destinationNode = GKGraphNode2D()
+    var nextNode = GKGraphNode2D()
+    var route: [GKGraphNode2D] = []
     var isMoving = false
     
-    init(parent: SCNNode, position: SCNVector3) {
+    init(parent: SCNNode, position: SCNVector3, initialNode: GKGraphNode2D, destinationNode: GKGraphNode2D) {
+        self.nextNode = initialNode
+        self.destinationNode = destinationNode
+        
         super.init()
         
         let shape = SCNSphere(radius: self.radius)
@@ -35,24 +40,24 @@ class Daemon: SCNNode {
         super.init(coder: aDecoder)
     }
     
-    func updateRoute(gridGraph: GKGridGraph) {
+    func updateRoute(graph: GKGraph) {
         print("Daemon:position = x: \(self.position.x), z: \(self.position.z)")
-        self.route = gridGraph.findPathFromNode(gridGraph.nodeAtGridPosition(int2(Int32(self.position.x), Int32(self.position.z)))!, toNode: gridGraph.nodeAtGridPosition(int2(0, 0))!) as! [GKGridGraphNode]
+        self.route = graph.findPathFromNode(self.nextNode, toNode: self.destinationNode) as! [GKGraphNode2D]
         
-        if route.count > 0 {
-            route.removeAtIndex(0)
+        if self.route.count > 0 {
+            self.route.removeAtIndex(0)
         }
         
-        if (!self.isMoving) {
+        if !self.isMoving {
             self.isMoving = true
             moveToNextPointOnRoute()            
         }
     }
     
     func moveToNextPointOnRoute() {
-        if route.count > 0 {
-            let nextNode = route.removeAtIndex(0)
-            self.moveTo(SCNVector3(CGFloat(nextNode.gridPosition.x), self.radius, CGFloat(nextNode.gridPosition.y)), duration: 1.0, completionHandler: { self.moveToNextPointOnRoute() })
+        if self.route.count > 0 {
+            self.nextNode = route.removeAtIndex(0)
+            self.moveTo(SCNVector3(CGFloat(nextNode.position.x), self.radius, CGFloat(nextNode.position.y)), duration: 1.0, completionHandler: { self.moveToNextPointOnRoute() })
         } else {
             self.arrivedAtOrigin()
         }

@@ -25,12 +25,14 @@ class GameGrid {
     
     var score = 0.0 as Float
     var tiles: [Coordinate: (SCNNode, Bool)] = [:]
-    var daemons = Set<Daemon>()
+    var nodes: [Coordinate: GKGraphNode2D] = [:]
+        var daemons = Set<Daemon>()
     var lastCubePosition: SCNVector3 = SCNVector3(0.0, 0.0, 0.0)
     var difficulty = Float(0.1)
     var lives = 100
-    var gridGraph = GKGridGraph()
-    
+    var graph = GKGraph()
+    var originNode: GKGraphNode2D?
+        
     var xMin = 0 as Int32
     var xMax = 0 as Int32
     var zMin = 0 as Int32
@@ -61,8 +63,8 @@ class GameGrid {
             
             //We've been here before so look at what this tile held, don't recalculate it.
             let key = Coordinate(cubePosition.x, cubePosition.z)
-            if (self.tiles[key] != nil) {
-                if (self.tiles[key]!.1) {
+            if self.tiles[key] != nil {
+                if self.tiles[key]!.1 {
                     print("GameGrid:die, die, die my darling")
                     self.lastCubePosition = SCNVector3(0.0, 0.0, 0.0)
                     self.cube.die()
@@ -74,7 +76,7 @@ class GameGrid {
             
             //New tile let's see what'll happen
             let distanceFromHome = sqrt(pow(self.lastCubePosition.x, 2.0) + pow(self.lastCubePosition.z, 2.0))
-            if (distanceFromHome > 3 && random > Double(1.0 - self.difficulty) && !(cubePosition.x == 0.0 && cubePosition.z == 0.0)) {
+            if distanceFromHome > 3 && random > Double(1.0 - self.difficulty) && !(cubePosition.x == 0.0 && cubePosition.z == 0.0) {
                 print("GameGrid:die, die, die my darling")
                 self.lastCubePosition = SCNVector3(0.0, 0.0, 0.0)
                 self.cube.die()
@@ -107,12 +109,15 @@ class GameGrid {
     func addFloorTile(position: SCNVector3, isDying: Bool, tileColour: UIColor) {
         //Already got one
         let key = Coordinate(position.x, position.z)
-        if (self.tiles[key] != nil) {
+        if self.tiles[key] != nil {
             return
         }
+        
+        self.updateBounds(position)
+        let newNode = self.updateGraph(position)
 
-        if (isDying) {
-            let spawnPoint = SpawnPoint(parent: self.floor, position: SCNVector3(x: position.x, y: epsilon, z: position.z), size: self.cubeSize)
+        if isDying {
+            let spawnPoint = SpawnPoint(parent: self.floor, position: SCNVector3(x: position.x, y: epsilon, z: position.z), size: self.cubeSize, spawnPointNode: newNode, originNode: self.originNode!)
             spawnPoint.events.listenTo("daemonCreated", action: self.addDaemon)
             tiles[Coordinate(position.x, position.z)] = (spawnPoint, isDying)
         } else {
@@ -124,32 +129,29 @@ class GameGrid {
             self.floor.addChildNode(tileNode)
             tiles[Coordinate(position.x, position.z)] = (tileNode, isDying)
         }
-        
-        self.updateBounds(position)
-        self.updateGridGraph()
     }
     
     func updateBounds(position: SCNVector3) {
         let x = Int32(position.x)
         let z = Int32(position.z)
         
-        if (x > self.xMax) {
+        if x > self.xMax {
             self.xMax = x
         }
-        if (x < self.xMin) {
+        if x < self.xMin {
             self.xMin = x
         }
-        if (z > self.zMax) {
+        if z > self.zMax {
             self.zMax = z
         }
-        if (z < self.zMin) {
+        if z < self.zMin {
             self.zMin = z
         }
     }
     
     func updateScore(position: SCNVector3) {
         let key = Coordinate(position.x, position.z)
-        if (self.tiles[key] == nil) {
+        if self.tiles[key] == nil {
             self.score += 100.0 * self.difficulty
             self.score += 50.0 * self.difficulty * log10(sqrt(pow(self.lastCubePosition.x, 2.0) + pow(self.lastCubePosition.z, 2.0)))
         }
@@ -167,7 +169,7 @@ class GameGrid {
     func addDaemon(information:Any?) {
         if let daemon = information as? Daemon {
             print("GameGrid:daemon created")
-            daemon.updateRoute(self.gridGraph)
+            daemon.updateRoute(self.graph)
             daemons.insert(daemon)
             daemon.events.listenTo("arrivedAtOrigin", action: self.removeDaemon)
         }
@@ -202,21 +204,37 @@ class GameGrid {
             }, animationDuration: 0.5)
     }
     
-    func updateGridGraph() {
-        self.gridGraph = GKGridGraph(fromGridStartingAt: int2(self.xMin, self.zMin), width: 1 + self.xMax - self.xMin, height: 1 + self.zMax - self.zMin, diagonalsAllowed: false)
+    func updateGraph(position: SCNVector3) -> GKGraphNode2D {
+        let coordinate = Coordinate(position.x, position.z)
+        let newNode = GKGraphNode2D(point: vector2(position.x, position.z))
         
-        var missingNodes : [GKGridGraphNode] = []
-        for x in self.xMin...self.xMax {
-            for z in self.zMin...self.zMax {
-                if !tiles.keys.contains(Coordinate(x, z)) {
-                    missingNodes.append(self.gridGraph.nodeAtGridPosition(int2(x, z))!)
-                }
-            }
+        if position.x == 0.0 && position.z == 0.0 {
+            self.originNode = newNode
         }
-        self.gridGraph.removeNodes(missingNodes)
         
+        nodes[coordinate] = newNode
+        self.graph.addNodes([newNode])
+        
+        var nodesToConnect: [GKGraphNode2D] = []
+        if let node = nodes[Coordinate(position.x + 1, position.z)] {
+            nodesToConnect.append(node)
+        }
+        if let node = nodes[Coordinate(position.x - 1, position.z)] {
+            nodesToConnect.append(node)
+        }
+        if let node = nodes[Coordinate(position.x, position.z + 1)] {
+            nodesToConnect.append(node)
+        }
+        if let node = nodes[Coordinate(position.x, position.z - 1)] {
+            nodesToConnect.append(node)
+        }
+        
+        newNode.addConnectionsToNodes(nodesToConnect, bidirectional: true)
+
         for daemon in daemons {
-            daemon.updateRoute(self.gridGraph)
+            daemon.updateRoute(self.graph)
         }
+        
+        return newNode
     }
 }
