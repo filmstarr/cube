@@ -26,7 +26,7 @@ class GameGrid {
     var score = 0.0 as Float
     var tiles: [Coordinate: (SCNNode, Bool)] = [:]
     var nodes: [Coordinate: GKGraphNode2D] = [:]
-        var daemons = Set<Daemon>()
+    var daemons = Set<Daemon>()
     var lastCubePosition: SCNVector3 = SCNVector3(0.0, 0.0, 0.0)
     var difficulty = Float(0.1)
     var lives = 100
@@ -51,6 +51,12 @@ class GameGrid {
         self.cube.events.listenTo("rotatingTo", action: self.cubeRotatingTo)
         self.cube.events.listenTo("rotatedTo", action: self.cubeRotatedTo)
         self.hud.events.listenTo("difficultyUpdated", action: self.setDifficulty)
+    }
+    
+    func update(time: NSTimeInterval) {
+        for daemon in self.daemons {
+            daemon.update(time)
+        }
     }
     
     func cubeRotatingTo(information:Any?) {
@@ -119,7 +125,7 @@ class GameGrid {
         if isDying {
             let spawnPoint = SpawnPoint(parent: self.floor, position: SCNVector3(x: position.x, y: epsilon, z: position.z), size: self.cubeSize, spawnPointNode: newNode, originNode: self.originNode!)
             spawnPoint.events.listenTo("daemonCreated", action: self.addDaemon)
-            tiles[Coordinate(position.x, position.z)] = (spawnPoint, isDying)
+            self.tiles[Coordinate(position.x, position.z)] = (spawnPoint, isDying)
         } else {
             let tile = SCNPlane(width: self.cubeSize, height: self.cubeSize)
             tile.firstMaterial?.diffuse.contents = tileColour
@@ -127,7 +133,7 @@ class GameGrid {
             tileNode.eulerAngles = SCNVector3(GLKMathDegreesToRadians(-90), 0, 0)
             tileNode.position = SCNVector3(position.x, epsilon, position.z)
             self.floor.addChildNode(tileNode)
-            tiles[Coordinate(position.x, position.z)] = (tileNode, isDying)
+            self.tiles[Coordinate(position.x, position.z)] = (tileNode, isDying)
         }
     }
     
@@ -170,7 +176,7 @@ class GameGrid {
         if let daemon = information as? Daemon {
             print("GameGrid:daemon created")
             daemon.updateRoute(self.graph)
-            daemons.insert(daemon)
+            self.daemons.insert(daemon)
             daemon.events.listenTo("arrivedAtOrigin", action: self.removeDaemon)
         }
     }
@@ -216,18 +222,55 @@ class GameGrid {
         self.graph.addNodes([newNode])
         
         var nodesToConnect: [GKGraphNode2D] = []
+        var nodeOneZero: GKGraphNode2D?
+        var nodeMinusOneZero: GKGraphNode2D?
+        var nodeZeroOne: GKGraphNode2D?
+        var nodeZeroMinusOne: GKGraphNode2D?
+        
         if let node = nodes[Coordinate(position.x + 1, position.z)] {
             nodesToConnect.append(node)
+            nodeOneZero = node
         }
         if let node = nodes[Coordinate(position.x - 1, position.z)] {
             nodesToConnect.append(node)
+            nodeMinusOneZero = node
         }
         if let node = nodes[Coordinate(position.x, position.z + 1)] {
             nodesToConnect.append(node)
+            nodeZeroOne = node
         }
         if let node = nodes[Coordinate(position.x, position.z - 1)] {
             nodesToConnect.append(node)
+            nodeZeroMinusOne = node
         }
+
+        //Diagonal nodes
+        if let node = nodes[Coordinate(position.x + 1, position.z + 1)] {
+            if let n = nodeOneZero, m = nodeZeroOne {
+                nodesToConnect.append(node)
+                n.addConnectionsToNodes([m], bidirectional: true)
+            }
+        }
+        if let node = nodes[Coordinate(position.x + 1, position.z - 1)] {
+            if let n = nodeOneZero, m = nodeZeroMinusOne {
+                nodesToConnect.append(node)
+                n.addConnectionsToNodes([m], bidirectional: true)
+            }
+        }
+        if let node = nodes[Coordinate(position.x - 1, position.z + 1)] {
+            if let n = nodeMinusOneZero, m = nodeZeroOne {
+                nodesToConnect.append(node)
+                n.addConnectionsToNodes([m], bidirectional: true)
+            }
+        }
+        if let node = nodes[Coordinate(position.x - 1, position.z - 1)] {
+            if let n = nodeMinusOneZero, m = nodeZeroMinusOne {
+                nodesToConnect.append(node)
+                n.addConnectionsToNodes([m], bidirectional: true)
+            }
+        }
+        
+        print(nodesToConnect)
         
         newNode.addConnectionsToNodes(nodesToConnect, bidirectional: true)
 

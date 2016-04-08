@@ -16,9 +16,10 @@ class Daemon: SCNNode {
     let radius = CGFloat(0.20)
     let speed = 1.0
     
-    var destinationNode = GKGraphNode2D()
     var nextNode = GKGraphNode2D()
+    var destinationNode = GKGraphNode2D()
     var route: [GKGraphNode2D] = []
+    var lastUpdateTime = NSTimeInterval()
     var isMoving = false
     
     init(parent: SCNNode, position: SCNVector3, initialNode: GKGraphNode2D, destinationNode: GKGraphNode2D) {
@@ -40,26 +41,45 @@ class Daemon: SCNNode {
         super.init(coder: aDecoder)
     }
     
+    func update(time: NSTimeInterval) {
+        if (self.lastUpdateTime == 0 || !self.isMoving) {
+            self.lastUpdateTime = time
+            return
+        }
+        
+        let xDiff = self.nextNode.position.x - self.position.x
+        let zDiff = self.nextNode.position.y - self.position.z
+        let distanceFromNextNode = sqrt(pow(xDiff, 2.0) + pow(zDiff, 2.0))
+        let movement = Float(self.speed * (time - self.lastUpdateTime))
+        
+        if (distanceFromNextNode < movement) {
+            //Arrived at next node
+            if (self.route.count == 0) {
+                self.arrivedAtOrigin()
+            } else {
+                self.position = SCNVector3(CGFloat(self.nextNode.position.x), self.radius, CGFloat(self.nextNode.position.y))
+                self.nextNode = route.removeAtIndex(0)
+            }
+        } else {
+            let angle = atan(xDiff/zDiff)
+            let xMove = abs(movement*sin(angle))
+            let zMove = abs(movement*cos(angle))
+            self.position = SCNVector3(CGFloat(self.position.x+(sign(xDiff)*xMove)), self.radius, CGFloat(self.position.z+(sign(zDiff)*zMove)))
+        }
+        
+        self.lastUpdateTime = time
+    }
+    
     func updateRoute(graph: GKGraph) {
         print("Daemon:position = x: \(self.position.x), z: \(self.position.z)")
         self.route = graph.findPathFromNode(self.nextNode, toNode: self.destinationNode) as! [GKGraphNode2D]
         
-        if self.route.count > 0 {
-            self.route.removeAtIndex(0)
-        }
+        print("Daemon:route - \(self.route)")
         
-        if !self.isMoving {
+        if (self.route.count > 1) {
+            self.route.removeAtIndex(0)
+            self.nextNode = self.route.removeAtIndex(0)
             self.isMoving = true
-            moveToNextPointOnRoute()            
-        }
-    }
-    
-    func moveToNextPointOnRoute() {
-        if self.route.count > 0 {
-            self.nextNode = route.removeAtIndex(0)
-            self.moveTo(SCNVector3(CGFloat(nextNode.position.x), self.radius, CGFloat(nextNode.position.y)), duration: 1.0, completionHandler: { self.moveToNextPointOnRoute() })
-        } else {
-            self.arrivedAtOrigin()
         }
     }
     
@@ -68,7 +88,7 @@ class Daemon: SCNNode {
         self.events.trigger("arrivedAtOrigin", information: self)
         self.destroy()
     }
-
+    
     func destroy() {
         self.geometry!.firstMaterial!.normal.contents = nil
         self.geometry!.firstMaterial!.diffuse.contents = nil
