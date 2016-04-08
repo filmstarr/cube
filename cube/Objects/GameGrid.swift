@@ -17,22 +17,21 @@ class GameGrid {
     let cubeSize: CGFloat
     let epsilon = 0.001 as Float
     let originColour = UIColor(red: 0.0, green:0.302, blue:0.071, alpha:1.00)
+    let originNode = GKGraphNode2D(point: float2(0.0, 0.0))
+    let store = NSUserDefaults.standardUserDefaults()
 
     let floor: SCNNode
     let cube: Cube
     let hud: Hud
-    let store = NSUserDefaults.standardUserDefaults()
     
     var score = 0.0 as Float
     var tiles: [Coordinate: (SCNNode, Bool)] = [:]
-    var nodes: [Coordinate: GKGraphNode2D] = [:]
-        var daemons = Set<Daemon>()
+    var daemons = Set<Daemon>()
     var lastCubePosition: SCNVector3 = SCNVector3(0.0, 0.0, 0.0)
     var difficulty = Float(0.1)
     var lives = 100
-    var graph = GKGraph()
-    var originNode: GKGraphNode2D?
-        
+    var graph = GKObstacleGraph()
+    
     var xMin = 0 as Int32
     var xMax = 0 as Int32
     var zMin = 0 as Int32
@@ -51,6 +50,12 @@ class GameGrid {
         self.cube.events.listenTo("rotatingTo", action: self.cubeRotatingTo)
         self.cube.events.listenTo("rotatedTo", action: self.cubeRotatedTo)
         self.hud.events.listenTo("difficultyUpdated", action: self.setDifficulty)
+    }
+    
+    func update(time: NSTimeInterval) {
+        for daemon in daemons {
+            daemon.update(time)
+        }
     }
     
     func cubeRotatingTo(information:Any?) {
@@ -113,13 +118,10 @@ class GameGrid {
             return
         }
         
-        self.updateBounds(position)
-        let newNode = self.updateGraph(position)
-
         if isDying {
-            let spawnPoint = SpawnPoint(parent: self.floor, position: SCNVector3(x: position.x, y: epsilon, z: position.z), size: self.cubeSize, spawnPointNode: newNode, originNode: self.originNode!)
+            let spawnPoint = SpawnPoint(parent: self.floor, position: SCNVector3(x: position.x, y: epsilon, z: position.z), size: self.cubeSize, originNode: self.originNode)
             spawnPoint.events.listenTo("daemonCreated", action: self.addDaemon)
-            tiles[Coordinate(position.x, position.z)] = (spawnPoint, isDying)
+            self.tiles[Coordinate(position.x, position.z)] = (spawnPoint, isDying)
         } else {
             let tile = SCNPlane(width: self.cubeSize, height: self.cubeSize)
             tile.firstMaterial?.diffuse.contents = tileColour
@@ -127,8 +129,11 @@ class GameGrid {
             tileNode.eulerAngles = SCNVector3(GLKMathDegreesToRadians(-90), 0, 0)
             tileNode.position = SCNVector3(position.x, epsilon, position.z)
             self.floor.addChildNode(tileNode)
-            tiles[Coordinate(position.x, position.z)] = (tileNode, isDying)
+            self.tiles[Coordinate(position.x, position.z)] = (tileNode, isDying)
         }
+        
+        self.updateBounds(position)
+        self.updateGraph(position)
     }
     
     func updateBounds(position: SCNVector3) {
@@ -204,37 +209,24 @@ class GameGrid {
             }, animationDuration: 0.5)
     }
     
-    func updateGraph(position: SCNVector3) -> GKGraphNode2D {
-        let coordinate = Coordinate(position.x, position.z)
-        let newNode = GKGraphNode2D(point: vector2(position.x, position.z))
-        
-        if position.x == 0.0 && position.z == 0.0 {
-            self.originNode = newNode
+    func updateGraph(position: SCNVector3) {
+        var obstacles = [GKPolygonObstacle]()
+        for x in (xMin-1)...(xMax+1) {
+            for z in (zMin-1)...(zMax+1) {
+                let key = Coordinate(x, z)
+                if self.tiles[key] == nil {
+                    let xFloat = Float(x)
+                    let zFloat = Float(z)
+                    let points = [vector_float2(xFloat-0.5, zFloat-0.5), vector_float2(xFloat-0.5, zFloat+0.5), vector_float2(xFloat+0.5, zFloat-0.5), vector_float2(xFloat+0.5, zFloat+0.5)]
+                    obstacles.append(GKPolygonObstacle(points: UnsafeMutablePointer(points), count: points.count))
+                }
+            }
         }
         
-        nodes[coordinate] = newNode
-        self.graph.addNodes([newNode])
+        self.graph = GKObstacleGraph(obstacles: obstacles, bufferRadius: 0.0)
         
-        var nodesToConnect: [GKGraphNode2D] = []
-        if let node = nodes[Coordinate(position.x + 1, position.z)] {
-            nodesToConnect.append(node)
-        }
-        if let node = nodes[Coordinate(position.x - 1, position.z)] {
-            nodesToConnect.append(node)
-        }
-        if let node = nodes[Coordinate(position.x, position.z + 1)] {
-            nodesToConnect.append(node)
-        }
-        if let node = nodes[Coordinate(position.x, position.z - 1)] {
-            nodesToConnect.append(node)
-        }
-        
-        newNode.addConnectionsToNodes(nodesToConnect, bidirectional: true)
-
         for daemon in daemons {
             daemon.updateRoute(self.graph)
         }
-        
-        return newNode
     }
 }

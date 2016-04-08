@@ -15,12 +15,10 @@ class SpawnPoint: SCNNode {
     let events = EventManager()
 
     var parent = SCNNode()
-    var spawnPointNode = GKGraphNode2D()
     var originNode = GKGraphNode2D()
     
-    init(parent: SCNNode, position: SCNVector3, size: CGFloat, spawnPointNode: GKGraphNode2D, originNode: GKGraphNode2D) {
+    init(parent: SCNNode, position: SCNVector3, size: CGFloat, originNode: GKGraphNode2D) {
         self.parent = parent
-        self.spawnPointNode = spawnPointNode
         self.originNode = originNode
 
         super.init()
@@ -33,7 +31,7 @@ class SpawnPoint: SCNNode {
 
         parent.addChildNode(self)
 
-        let timer = NSTimer(timeInterval: 3.0, target: self, selector: #selector(SpawnPoint.spawn), userInfo: nil, repeats: true)
+        let timer = NSTimer(timeInterval: 3.0, target: self, selector: #selector(SpawnPoint.spawn), userInfo: nil, repeats: false)
         NSRunLoop.mainRunLoop().addTimer(timer, forMode: NSRunLoopCommonModes)
     }
 
@@ -42,7 +40,7 @@ class SpawnPoint: SCNNode {
     }
     
     func spawn() {
-        let daemon = Daemon(parent: self.parent, position: self.position, initialNode: self.spawnPointNode, destinationNode: self.originNode)
+        let daemon = Daemon(parent: self.parent, position: self.position, destinationNode: self.originNode)
         print("SpawnPoint:daemon created")
         self.events.trigger("daemonCreated", information: daemon)
     }

@@ -11,13 +11,14 @@ import QuartzCore
 import SceneKit
 import Darwin
 
-class GameViewController: UIViewController {
+class GameViewController: UIViewController, SCNSceneRendererDelegate {
     
     let π = M_PI
     let xAxis = SCNVector3(1, 0, 0)
     
     var sceneView:SCNView?
     var cube:Cube?
+    var gameGrid:GameGrid?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -30,13 +31,15 @@ class GameViewController: UIViewController {
         self.cube = self.createCube(scene)
         self.createCamera(scene, cube: self.cube!)
         let hud = Hud(size: self.view.bounds.size, tintColour: (self.cube?.originalColour)!)
-        self.createGameGrid(scene, cube: self.cube!, hud: hud)
+        self.gameGrid = self.createGameGrid(scene, cube: self.cube!, hud: hud)
                 
         //Create scene view
         self.sceneView = self.view as? SCNView
         self.sceneView!.scene = scene
         self.sceneView!.backgroundColor = UIColor.whiteColor()
         self.sceneView!.overlaySKScene = hud
+        self.sceneView!.delegate = self
+        self.sceneView!.playing = true
         
         #if !DEBUG
             self.sceneView!.antialiasingMode = SCNAntialiasingMode.Multisampling4X
@@ -44,6 +47,10 @@ class GameViewController: UIViewController {
         
         //Register gestures
         self.registerGestures()
+    }
+    
+    func renderer(aRenderer: SCNSceneRenderer, updateAtTime time: NSTimeInterval) {
+        self.gameGrid!.update(time)
     }
     
     func createLights(scene: SCNScene) {
