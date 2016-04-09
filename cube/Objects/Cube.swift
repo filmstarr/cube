@@ -53,7 +53,7 @@ class Cube {
     func rotate(x: Float, z: Float) {
         if !self.isDying {
             if !self.isRotating {
-                print("Cube:rotate cube")
+                print("Cube:rotate cube at \(NSDate().timeIntervalSince1970)")
                 self.isRotating = true
                 let currentPosition = self.cubeNode.position
                 let xSign = sign(x)
@@ -63,12 +63,12 @@ class Cube {
                 self.cubeNode.position = SCNVector3(currentPosition.x + (self.cubeSizeBy2 * xSign), 0.0, currentPosition.z + (self.cubeSizeBy2 * zSign))
                 self.position = SCNVector3(self.position.x + xSign, 0.0, self.position.z + zSign)
                 if xSign != 0.0 {
-                    self.cubeNode.runAction(SCNAction.rotateByAngle(CGFloat(-πBy2 * xSign), aroundAxis: zAxis, duration: self.rotationDuration), completionHandler:{param in
+                    self.cubeNode.runAction(SCNAction.rotateByAngle(CGFloat(-self.πBy2 * xSign), aroundAxis: self.zAxis, duration: self.rotationDuration), completionHandler:{param in
                             self.finaliseRotation(self.cubeSizeBy2 * xSign, zOffset: 0.0)
                     })
                 }
                 if zSign != 0.0 {
-                    self.cubeNode.runAction(SCNAction.rotateByAngle(CGFloat(πBy2 * zSign), aroundAxis: xAxis, duration: self.rotationDuration), completionHandler:{param in
+                    self.cubeNode.runAction(SCNAction.rotateByAngle(CGFloat(self.πBy2 * zSign), aroundAxis: self.xAxis, duration: self.rotationDuration), completionHandler:{param in
                             self.finaliseRotation(0.0, zOffset: self.cubeSizeBy2 * zSign)
                     })
                 }
@@ -90,6 +90,7 @@ class Cube {
         self.isRotating = false
 
         let information = (position: self.position, isDying: self.isDying)
+        print("Cube:emitting rotatedTo event")
         self.events.trigger("rotatedTo", information: information)
         
         //Check for any pending rotations that haven't been fulfilled

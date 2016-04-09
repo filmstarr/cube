@@ -93,7 +93,9 @@ class GameGrid {
     }
     
     func cubeRotatedTo(information:Any?) {
+        print("GameGrid:received rotatedTo event")
         if let rotationInformation = information as? (position: SCNVector3, isDying: Bool) {
+            print("GameGrid:received rotatedTo event. isDying=\(rotationInformation.1)")
             self.addFloorTile(rotationInformation.0, isDying: rotationInformation.1)
         }
     }
@@ -114,8 +116,10 @@ class GameGrid {
     
     func addFloorTile(position: SCNVector3, isDying: Bool, tileColour: UIColor) {
         //Already got one
+        print("GameGrid:add tile x=\(position.x), z=\(position.z), tileColour=\(tileColour), isDying=\(isDying)")
         let key = Coordinate(position.x, position.z)
         if self.tiles[key] != nil {
+            print("GameGrid:tile already exists")
             return
         }
         
@@ -126,6 +130,7 @@ class GameGrid {
             let spawnPoint = SpawnPoint(parent: self.floor, position: SCNVector3(x: position.x, y: epsilon, z: position.z), size: self.cubeSize, spawnPointNode: newNode, originNode: self.originNode!)
             spawnPoint.events.listenTo("daemonCreated", action: self.addDaemon)
             self.tiles[Coordinate(position.x, position.z)] = (spawnPoint, isDying)
+            print("GameGrid:spawn point created: \(spawnPoint)")
         } else {
             let tile = SCNPlane(width: self.cubeSize, height: self.cubeSize)
             tile.firstMaterial?.diffuse.contents = tileColour
@@ -134,6 +139,7 @@ class GameGrid {
             tileNode.position = SCNVector3(position.x, epsilon, position.z)
             self.floor.addChildNode(tileNode)
             self.tiles[Coordinate(position.x, position.z)] = (tileNode, isDying)
+            print("GameGrid:tile created: \(tileNode)")
         }
     }
     
@@ -269,8 +275,6 @@ class GameGrid {
                 n.addConnectionsToNodes([m], bidirectional: true)
             }
         }
-        
-        print(nodesToConnect)
         
         newNode.addConnectionsToNodes(nodesToConnect, bidirectional: true)
 
