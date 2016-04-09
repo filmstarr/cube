@@ -21,6 +21,7 @@ class Cube {
     let zAxis = SCNVector3(0.0, 0.0, 1.0)
     let origin = SCNVector3(0.0, 0.0, 0.0)
     let rotationDurationReductionFactor = 0.95
+    let epsilon = 0.001 as Float
     
     let cubeNode: SCNNode
     let originalColour = UIColor(red: 0.518, green:0.000, blue:0.251, alpha:1.00)
@@ -51,36 +52,40 @@ class Cube {
     }
     
     func rotate(x: Float, z: Float) {
-        if !self.isDying {
-            if !self.isRotating {
-                print("Cube:rotate cube at \(NSDate().timeIntervalSince1970)")
-                self.isRotating = true
-                let currentPosition = self.cubeNode.position
-                let xSign = sign(x)
-                let zSign = sign(z)
+        print("Cube:position: \(self.cubeNode.position)")
+        let lockQueue = dispatch_queue_create("com.filmstarr.cube", nil)
+        dispatch_sync(lockQueue) {
+            if !self.isDying {
+                if !self.isRotating {
+                    print("Cube:rotate cube at \(NSDate().timeIntervalSince1970)")
+                    self.isRotating = true
+                    let currentPosition = self.cubeNode.position
+                    let xSign = sign(x)
+                    let zSign = sign(z)
 
-                self.cubeNode.pivot = SCNMatrix4MakeTranslation(self.cubeSizeBy2 * xSign, -self.cubeSizeBy2, self.cubeSizeBy2 * zSign)
-                self.cubeNode.position = SCNVector3(currentPosition.x + (self.cubeSizeBy2 * xSign), 0.0, currentPosition.z + (self.cubeSizeBy2 * zSign))
-                self.position = SCNVector3(self.position.x + xSign, 0.0, self.position.z + zSign)
-                if xSign != 0.0 {
-                    self.cubeNode.runAction(SCNAction.rotateByAngle(CGFloat(-self.πBy2 * xSign), aroundAxis: self.zAxis, duration: self.rotationDuration), completionHandler:{param in
-                            self.finaliseRotation(self.cubeSizeBy2 * xSign, zOffset: 0.0)
-                    })
+                    self.cubeNode.pivot = SCNMatrix4MakeTranslation(self.cubeSizeBy2 * xSign, -self.cubeSizeBy2, self.cubeSizeBy2 * zSign)
+                    self.cubeNode.position = SCNVector3(currentPosition.x + (self.cubeSizeBy2 * xSign), 0.0, currentPosition.z + (self.cubeSizeBy2 * zSign))
+                    self.position = SCNVector3(self.position.x + xSign, 0.0, self.position.z + zSign)
+                    if abs(xSign) > self.epsilon {
+                        self.cubeNode.runAction(SCNAction.rotateByAngle(CGFloat(-self.πBy2 * xSign), aroundAxis: self.zAxis, duration: self.rotationDuration), completionHandler:{param in
+                                self.finaliseRotation(self.cubeSizeBy2 * xSign, zOffset: 0.0)
+                        })
+                    }
+                    if abs(zSign) > self.epsilon {
+                        self.cubeNode.runAction(SCNAction.rotateByAngle(CGFloat(self.πBy2 * zSign), aroundAxis: self.xAxis, duration: self.rotationDuration), completionHandler:{param in
+                                self.finaliseRotation(0.0, zOffset: self.cubeSizeBy2 * zSign)
+                        })
+                    }
+                    let movement = (xChange: self.cubeSizeBy2 * 2 * xSign, zChange: self.cubeSizeBy2 * 2 * zSign)
+                    self.events.trigger("movingBy", information: movement)
+                    self.events.trigger("rotatingTo", information: self.position)
                 }
-                if zSign != 0.0 {
-                    self.cubeNode.runAction(SCNAction.rotateByAngle(CGFloat(self.πBy2 * zSign), aroundAxis: self.xAxis, duration: self.rotationDuration), completionHandler:{param in
-                            self.finaliseRotation(0.0, zOffset: self.cubeSizeBy2 * zSign)
-                    })
+                else {
+                    print("Cube:queue rotation")
+                    self.rotationDuration *= self.rotationDurationReductionFactor
+                    self.pendingRotations += [(x: x, z: z)]
+                    print("Cube:rotation queue =", self.pendingRotations.count)
                 }
-                let movement = (xChange: self.cubeSizeBy2 * 2 * xSign, zChange: self.cubeSizeBy2 * 2 * zSign)
-                self.events.trigger("movingBy", information: movement)
-                self.events.trigger("rotatingTo", information: self.position)
-            }
-            else {
-                print("Cube:queue rotation")
-                self.rotationDuration *= self.rotationDurationReductionFactor
-                self.pendingRotations += [(x: x, z: z)]
-                print("Cube:rotation queue =", self.pendingRotations.count)
             }
         }
     }
@@ -107,6 +112,7 @@ class Cube {
     }
     
     func resetRotation(xOffset: Float, zOffset: Float) {
+        print("Cube:resetting rotation")
         self.isRotating = false
         self.cubeNode.position = SCNVector3(self.cubeNode.position.x + xOffset, 0.0, self.cubeNode.position.z + zOffset)
         self.cubeNode.rotation = SCNVector4(0.0, 0.0, 0.0, 0.0)

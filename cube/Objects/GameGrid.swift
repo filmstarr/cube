@@ -82,7 +82,7 @@ class GameGrid {
             
             //New tile let's see what'll happen
             let distanceFromHome = sqrt(pow(self.lastCubePosition.x, 2.0) + pow(self.lastCubePosition.z, 2.0))
-            if distanceFromHome > 3 && random > Double(1.0 - self.difficulty) && !(cubePosition.x == 0.0 && cubePosition.z == 0.0) {
+            if distanceFromHome > 3 && random > Double(1.0 - self.difficulty) && !(abs(cubePosition.x) < self.epsilon && abs(cubePosition.z) < self.epsilon) {
                 print("GameGrid:die, die, die my darling")
                 self.lastCubePosition = SCNVector3(0.0, 0.0, 0.0)
                 self.cube.die()
@@ -220,7 +220,7 @@ class GameGrid {
         let coordinate = Coordinate(position.x, position.z)
         let newNode = GKGraphNode2D(point: vector2(position.x, position.z))
         
-        if position.x == 0.0 && position.z == 0.0 {
+        if abs(position.x) < self.epsilon && abs(position.z) < self.epsilon {
             self.originNode = newNode
         }
         
