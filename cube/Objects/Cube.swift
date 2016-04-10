@@ -22,6 +22,7 @@ class Cube {
     let origin = SCNVector3(0.0, 0.0, 0.0)
     let rotationDurationReductionFactor = 0.95
     let epsilon = 0.001 as Float
+    let rotateQueue = dispatch_queue_create("com.filmstarr.cube.rotate", DISPATCH_QUEUE_SERIAL)
     
     let cubeNode: SCNNode
     let originalColour = UIColor(red: 0.518, green:0.000, blue:0.251, alpha:1.00)
@@ -52,16 +53,15 @@ class Cube {
     }
     
     func rotate(x: Float, z: Float) {
-        print("Cube:position: \(self.cubeNode.position)")
-        let lockQueue = dispatch_queue_create("com.filmstarr.cube", nil)
-        dispatch_sync(lockQueue) {
+        dispatch_async(self.rotateQueue) {
             if !self.isDying {
                 if !self.isRotating {
+                    print("Cube:position: \(self.cubeNode.position)")
                     print("Cube:rotate cube at \(NSDate().timeIntervalSince1970)")
                     self.isRotating = true
                     let currentPosition = self.cubeNode.position
-                    let xSign = sign(x)
-                    let zSign = sign(z)
+                    let xSign = abs(x) > self.epsilon ? sign(x) : 0.0
+                    let zSign = abs(z) > self.epsilon ? sign(z) : 0.0
 
                     self.cubeNode.pivot = SCNMatrix4MakeTranslation(self.cubeSizeBy2 * xSign, -self.cubeSizeBy2, self.cubeSizeBy2 * zSign)
                     self.cubeNode.position = SCNVector3(currentPosition.x + (self.cubeSizeBy2 * xSign), 0.0, currentPosition.z + (self.cubeSizeBy2 * zSign))
@@ -113,10 +113,10 @@ class Cube {
     
     func resetRotation(xOffset: Float, zOffset: Float) {
         print("Cube:resetting rotation")
-        self.isRotating = false
         self.cubeNode.position = SCNVector3(self.cubeNode.position.x + xOffset, 0.0, self.cubeNode.position.z + zOffset)
         self.cubeNode.rotation = SCNVector4(0.0, 0.0, 0.0, 0.0)
         self.cubeNode.pivot = SCNMatrix4MakeTranslation(0.0, -self.cubeSizeBy2, 0.0)
+        self.isRotating = false
     }
     
     func die() {
