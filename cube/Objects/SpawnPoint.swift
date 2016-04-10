@@ -14,6 +14,8 @@ class SpawnPoint: SCNNode {
     
     let events = EventManager()
 
+    var lastSpawnTime: NSTimeInterval?
+    
     var parent = SCNNode()
     var spawnPointNode = GKGraphNode2D()
     var originNode = GKGraphNode2D()
@@ -32,13 +34,22 @@ class SpawnPoint: SCNNode {
         self.position = position
 
         parent.addChildNode(self)
-
-        let timer = NSTimer(timeInterval: 3.0, target: self, selector: #selector(SpawnPoint.spawn), userInfo: nil, repeats: true)
-        NSRunLoop.mainRunLoop().addTimer(timer, forMode: NSRunLoopCommonModes)
     }
 
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
+    }
+    
+    func update(time: NSTimeInterval) {
+        if (self.lastSpawnTime == nil) {
+            self.lastSpawnTime = time
+            return
+        }
+        
+        if (time - self.lastSpawnTime! > 3.0) {
+            self.spawn()
+            self.lastSpawnTime = time
+        }
     }
     
     func spawn() {

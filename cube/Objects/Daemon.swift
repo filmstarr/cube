@@ -87,7 +87,6 @@ class Daemon: SCNNode {
     func arrivedAtOrigin() {
         print("Daemon:arrived at origin")
         self.events.trigger("arrivedAtOrigin", information: self)
-        self.destroy()
     }
     
     func destroy() {

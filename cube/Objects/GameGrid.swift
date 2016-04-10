@@ -27,6 +27,7 @@ class GameGrid {
     var tiles: [Coordinate: (SCNNode, Bool)] = [:]
     var nodes: [Coordinate: GKGraphNode2D] = [:]
     var daemons = Set<Daemon>()
+    var spawnPoints = Set<SpawnPoint>()
     var lastCubePosition: SCNVector3 = SCNVector3(0.0, 0.0, 0.0)
     var difficulty = Float(0.1)
     var lives = 100
@@ -54,6 +55,9 @@ class GameGrid {
     }
     
     func update(time: NSTimeInterval) {
+        for spawnPoint in self.spawnPoints {
+            spawnPoint.update(time)
+        }
         for daemon in self.daemons {
             daemon.update(time)
         }
@@ -130,6 +134,7 @@ class GameGrid {
             let spawnPoint = SpawnPoint(parent: self.floor, position: SCNVector3(x: position.x, y: epsilon, z: position.z), size: self.cubeSize, spawnPointNode: newNode, originNode: self.originNode!)
             spawnPoint.events.listenTo("daemonCreated", action: self.addDaemon)
             self.tiles[Coordinate(position.x, position.z)] = (spawnPoint, isDying)
+            self.spawnPoints.insert(spawnPoint)
             print("GameGrid:spawn point created: \(spawnPoint)")
         } else {
             let tile = SCNPlane(width: self.cubeSize, height: self.cubeSize)
@@ -192,7 +197,8 @@ class GameGrid {
             print("GameGrid:daemon arrived at origin")
 
             //Remove daemon
-            daemons.remove(daemon)
+            self.daemons.remove(daemon)
+            daemon.destroy()
             
             //Update lives
             self.lives -= 1
