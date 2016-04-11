@@ -28,6 +28,7 @@ class GameGrid {
     var nodes: [Coordinate: GKGraphNode2D] = [:]
     var daemons = Set<Daemon>()
     var spawnPoints = Set<SpawnPoint>()
+    var towers: [Coordinate: Tower] = [:]
     var lastCubePosition: SCNVector3 = SCNVector3(0.0, 0.0, 0.0)
     var difficulty = Float(0.1)
     var lives = 100
@@ -52,6 +53,7 @@ class GameGrid {
         self.cube.events.listenTo("rotatingTo", action: self.cubeRotatingTo)
         self.cube.events.listenTo("rotatedTo", action: self.cubeRotatedTo)
         self.hud.events.listenTo("difficultyUpdated", action: self.setDifficulty)
+        self.hud.events.listenTo("createTower", action: self.createTower)
     }
     
     func update(time: NSTimeInterval) {
@@ -60,6 +62,9 @@ class GameGrid {
         }
         for daemon in self.daemons {
             daemon.update(time)
+        }
+        for tower in self.towers.values {
+            tower.update(time)
         }
     }
     
@@ -289,5 +294,17 @@ class GameGrid {
         }
         
         return newNode
+    }
+    
+    func createTower(information:Any?) {
+        let coordinate = Coordinate(self.cube.position.x, self.cube.position.z)
+        if self.towers[coordinate] != nil {
+            print("tower already present")
+            return
+        }
+        
+        let tower = Tower(parent: self.floor, position: self.cube.position)
+        self.towers[coordinate] = tower
+        print("GameGrid:created tower")
     }
 }

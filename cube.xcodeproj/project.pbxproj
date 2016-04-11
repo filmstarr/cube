@@ -17,6 +17,7 @@
 		B0DB4A121CB9B69200ACEBFB /* Coordinate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0DB4A0F1CB9B69200ACEBFB /* Coordinate.swift */; };
 		B0DB4A131CB9B69200ACEBFB /* HelperFunctions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0DB4A101CB9B69200ACEBFB /* HelperFunctions.swift */; };
 		B0DB4A141CB9B69200ACEBFB /* SCNNodeExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0DB4A111CB9B69200ACEBFB /* SCNNodeExtensions.swift */; };
+		B0E237441CBC44F700A2991B /* Tower.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0E237431CBC44F700A2991B /* Tower.swift */; };
 		B0F64BC71BC7010B007D40A8 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0F64BC61BC7010B007D40A8 /* AppDelegate.swift */; };
 		B0F64BC91BC7010B007D40A8 /* art.scnassets in Resources */ = {isa = PBXBuildFile; fileRef = B0F64BC81BC7010B007D40A8 /* art.scnassets */; };
 		B0F64BCB1BC7010B007D40A8 /* GameViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0F64BCA1BC7010B007D40A8 /* GameViewController.swift */; };
@@ -55,6 +56,7 @@
 		B0DB4A0F1CB9B69200ACEBFB /* Coordinate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Coordinate.swift; path = Infrastructure/Coordinate.swift; sourceTree = "<group>"; };
 		B0DB4A101CB9B69200ACEBFB /* HelperFunctions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = HelperFunctions.swift; path = Infrastructure/HelperFunctions.swift; sourceTree = "<group>"; };
 		B0DB4A111CB9B69200ACEBFB /* SCNNodeExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SCNNodeExtensions.swift; path = Infrastructure/SCNNodeExtensions.swift; sourceTree = "<group>"; };
+		B0E237431CBC44F700A2991B /* Tower.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Tower.swift; path = Objects/Tower.swift; sourceTree = "<group>"; };
 		B0F64BC31BC7010B007D40A8 /* cube.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = cube.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B0F64BC61BC7010B007D40A8 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		B0F64BC81BC7010B007D40A8 /* art.scnassets */ = {isa = PBXFileReference; lastKnownFileType = wrapper.scnassets; path = art.scnassets; sourceTree = "<group>"; };
@@ -99,6 +101,7 @@
 		B0DA2EE21C8B820700A37DF5 /* Objects */ = {
 			isa = PBXGroup;
 			children = (
+				B0E237431CBC44F700A2991B /* Tower.swift */,
 				B0DB4A091CB9B67600ACEBFB /* Camera.swift */,
 				B0DB4A0A1CB9B67600ACEBFB /* Daemon.swift */,
 				B0DB4A0B1CB9B67600ACEBFB /* SpawnPoint.swift */,
@@ -315,6 +318,7 @@
 				B0DB4A0E1CB9B67600ACEBFB /* SpawnPoint.swift in Sources */,
 				B0F64BC71BC7010B007D40A8 /* AppDelegate.swift in Sources */,
 				B0DB4A0C1CB9B67600ACEBFB /* Camera.swift in Sources */,
+				B0E237441CBC44F700A2991B /* Tower.swift in Sources */,
 				B03527B41C8E1F3B00565699 /* Hud.swift in Sources */,
 				B0DB4A131CB9B69200ACEBFB /* HelperFunctions.swift in Sources */,
 				B0DB4A121CB9B69200ACEBFB /* Coordinate.swift in Sources */,

@@ -31,6 +31,7 @@ class Hud: SKScene {
         self.difficulty = self.store.floatForKey("difficulty")
         self.addScoreCard()
         self.addLives()
+        self.addCreateTowerButton()
     }
 
     required init?(coder aDecoder: NSCoder) {
@@ -102,5 +103,26 @@ class Hud: SKScene {
         self.store.synchronize()
         self.events.trigger("difficultyUpdated", information: self.difficulty)
         print("Hud:Difficulty = \(difficulty)")
+    }
+    
+    func addCreateTowerButton()
+    {
+        let button = SKShapeNode(circleOfRadius: 20)
+        button.position = CGPointMake(CGRectGetMaxX(self.frame) - 28, CGRectGetMaxY(self.frame) - 80)
+        button.strokeColor = SKColor.blackColor()
+        button.name = "createTowerNode"
+        self.addChild(button)
+    }
+    
+    override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
+        if let touch = touches.first {
+            let touchLocation = touch.locationInNode(self)
+            
+            let node = self.nodeAtPoint(touchLocation)
+            if (node.name == "createTowerNode") {
+                print("Hud:create tower")
+                self.events.trigger("createTower", information: nil)
+            }
+        }
     }
 }
