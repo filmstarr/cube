@@ -109,7 +109,8 @@ class Hud: SKScene {
     {
         let button = SKShapeNode(circleOfRadius: 20)
         button.position = CGPointMake(CGRectGetMaxX(self.frame) - 28, CGRectGetMaxY(self.frame) - 80)
-        button.strokeColor = SKColor.blackColor()
+        button.strokeColor = UIColor.blackColor()
+        button.fillColor = UIColor.greenColor()
         button.name = "createTowerNode"
         self.addChild(button)
     }

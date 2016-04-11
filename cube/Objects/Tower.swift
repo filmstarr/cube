@@ -29,7 +29,7 @@ class Tower: SCNNode {
         
         let shape = SCNSphere(radius: 0.4)
         self.position = SCNVector3(CGFloat(position.x), 0.4, CGFloat(position.z))
-        shape.firstMaterial!.diffuse.contents = UIColor.yellowColor()
+        shape.firstMaterial!.diffuse.contents = UIColor.greenColor()
         self.geometry = shape
         
         parent.addChildNode(self)
@@ -45,7 +45,7 @@ class Tower: SCNNode {
             return
         }
         
-        if (time - self.lastFireTime! > 0.5) {
+        if (time - self.lastFireTime! > 0.5 && daemons.count > 0) {
             self.fireAt(daemons.first!)
             self.lastFireTime = time
         }

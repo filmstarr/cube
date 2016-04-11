@@ -64,7 +64,7 @@ class GameGrid {
             daemon.update(time)
         }
         for tower in self.towers.values {
-            tower.update(time)
+            tower.update(time, daemons: self.daemons)
         }
     }
     
