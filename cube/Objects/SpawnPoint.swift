@@ -55,7 +55,6 @@ class SpawnPoint: SCNNode {
     func spawn() {
         let daemon = Daemon(parent: self.parent, position: self.position, initialNode: self.spawnPointNode, destinationNode: self.originNode)
         print("SpawnPoint:daemon created")
-        self.events.trigger("daemonCreated", information: daemon)
+        self.events.trigger("spawn", information: daemon)
     }
-    
 }

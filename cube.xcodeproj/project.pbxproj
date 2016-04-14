@@ -11,6 +11,7 @@
 		B03527B31C8E1F3B00565699 /* GameGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = B03527B01C8E1F3B00565699 /* GameGrid.swift */; };
 		B03527B41C8E1F3B00565699 /* Hud.swift in Sources */ = {isa = PBXBuildFile; fileRef = B03527B11C8E1F3B00565699 /* Hud.swift */; };
 		B03527B61C8E1F4B00565699 /* EventManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B03527B51C8E1F4B00565699 /* EventManager.swift */; };
+		B06A9FA61CC02743009A4B71 /* Missile.swift in Sources */ = {isa = PBXBuildFile; fileRef = B06A9FA51CC02743009A4B71 /* Missile.swift */; };
 		B0DB4A0C1CB9B67600ACEBFB /* Camera.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0DB4A091CB9B67600ACEBFB /* Camera.swift */; };
 		B0DB4A0D1CB9B67600ACEBFB /* Daemon.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0DB4A0A1CB9B67600ACEBFB /* Daemon.swift */; };
 		B0DB4A0E1CB9B67600ACEBFB /* SpawnPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0DB4A0B1CB9B67600ACEBFB /* SpawnPoint.swift */; };
@@ -50,6 +51,7 @@
 		B03527B01C8E1F3B00565699 /* GameGrid.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = GameGrid.swift; path = Objects/GameGrid.swift; sourceTree = "<group>"; };
 		B03527B11C8E1F3B00565699 /* Hud.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Hud.swift; path = Objects/Hud.swift; sourceTree = "<group>"; };
 		B03527B51C8E1F4B00565699 /* EventManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = EventManager.swift; path = Infrastructure/EventManager.swift; sourceTree = "<group>"; };
+		B06A9FA51CC02743009A4B71 /* Missile.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Missile.swift; path = Objects/Missile.swift; sourceTree = "<group>"; };
 		B0DB4A091CB9B67600ACEBFB /* Camera.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Camera.swift; path = Objects/Camera.swift; sourceTree = "<group>"; };
 		B0DB4A0A1CB9B67600ACEBFB /* Daemon.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Daemon.swift; path = Objects/Daemon.swift; sourceTree = "<group>"; };
 		B0DB4A0B1CB9B67600ACEBFB /* SpawnPoint.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SpawnPoint.swift; path = Objects/SpawnPoint.swift; sourceTree = "<group>"; };
@@ -101,6 +103,7 @@
 		B0DA2EE21C8B820700A37DF5 /* Objects */ = {
 			isa = PBXGroup;
 			children = (
+				B06A9FA51CC02743009A4B71 /* Missile.swift */,
 				B0E237431CBC44F700A2991B /* Tower.swift */,
 				B0DB4A091CB9B67600ACEBFB /* Camera.swift */,
 				B0DB4A0A1CB9B67600ACEBFB /* Daemon.swift */,
@@ -312,6 +315,7 @@
 				B03527B61C8E1F4B00565699 /* EventManager.swift in Sources */,
 				B0DB4A0D1CB9B67600ACEBFB /* Daemon.swift in Sources */,
 				B03527B21C8E1F3B00565699 /* Cube.swift in Sources */,
+				B06A9FA61CC02743009A4B71 /* Missile.swift in Sources */,
 				B03527B31C8E1F3B00565699 /* GameGrid.swift in Sources */,
 				B0DB4A141CB9B69200ACEBFB /* SCNNodeExtensions.swift in Sources */,
 				B0F64BCB1BC7010B007D40A8 /* GameViewController.swift in Sources */,

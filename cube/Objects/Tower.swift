@@ -14,11 +14,15 @@ class Tower: SCNNode {
     
     let events = EventManager()
     let range = 10
+    let frequency = 2.0
+    let cost = Tower.getCost()
+    
+    var level = 1
     
     var lastFireTime: NSTimeInterval?
-    var parent = SCNNode()
-    var spawnPointNode = GKGraphNode2D()
-    var originNode = GKGraphNode2D()
+    var parent: SCNNode?
+    var spawnPointNode: GKGraphNode2D?
+    var originNode: GKGraphNode2D?
     
     init(parent: SCNNode, position: SCNVector3) {
         self.parent = parent
@@ -39,21 +43,28 @@ class Tower: SCNNode {
         super.init(coder: aDecoder)
     }
     
-    func update(time: NSTimeInterval, daemons: Set<Daemon>) {
+    static func getCost() -> Float {
+        return 100.0
+    }
+    
+    func update(time: NSTimeInterval, daemons: [Daemon]) {
         if (self.lastFireTime == nil) {
             self.lastFireTime = time
             return
         }
         
-        if (time - self.lastFireTime! > 0.5 && daemons.count > 0) {
-            self.fireAt(daemons.first!)
+        if (time - self.lastFireTime! > 1 / self.frequency && daemons.count > 0) {
+            //TODO: Apply range and select most appropriate daemon
+            if daemons.count > 0 {
+                self.fire(daemons.first!)
+            }
             self.lastFireTime = time
         }
     }
     
-    func fireAt(daemon: Daemon) {
+    func fire(daemon: Daemon) {
         print("SpawnPoint:fire at \(daemon)")
-        self.events.trigger("fireAt", information: daemon)
+        let missile = Missile(parent: self.parent!, position: self.position, target: daemon, damage: self.level)
+        self.events.trigger("fire", information: missile)
     }
-    
 }

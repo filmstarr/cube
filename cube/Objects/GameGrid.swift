@@ -26,6 +26,7 @@ class GameGrid {
     var score = 0.0 as Float
     var tiles: [Coordinate: (SCNNode, Bool)] = [:]
     var nodes: [Coordinate: GKGraphNode2D] = [:]
+    var missiles = Set<Missile>()
     var daemons = Set<Daemon>()
     var spawnPoints = Set<SpawnPoint>()
     var towers: [Coordinate: Tower] = [:]
@@ -63,8 +64,12 @@ class GameGrid {
         for daemon in self.daemons {
             daemon.update(time)
         }
+        let sortedDaemons = self.daemons.sort({ $0.routeLength < $1.routeLength })
         for tower in self.towers.values {
-            tower.update(time, daemons: self.daemons)
+            tower.update(time, daemons: sortedDaemons)
+        }
+        for missile in self.missiles {
+            missile.update(time)
         }
     }
     
@@ -137,7 +142,7 @@ class GameGrid {
 
         if isDying {
             let spawnPoint = SpawnPoint(parent: self.floor, position: SCNVector3(x: position.x, y: epsilon, z: position.z), size: self.cubeSize, spawnPointNode: newNode, originNode: self.originNode!)
-            spawnPoint.events.listenTo("daemonCreated", action: self.addDaemon)
+            spawnPoint.events.listenTo("spawn", action: self.addDaemon)
             self.tiles[Coordinate(position.x, position.z)] = (spawnPoint, isDying)
             self.spawnPoints.insert(spawnPoint)
             print("GameGrid:spawn point created: \(spawnPoint)")
@@ -193,31 +198,41 @@ class GameGrid {
             print("GameGrid:daemon created")
             daemon.updateRoute(self.graph)
             self.daemons.insert(daemon)
-            daemon.events.listenTo("arrivedAtOrigin", action: self.removeDaemon)
+            daemon.events.listenTo("home", action: self.daemonHome)
+            daemon.events.listenTo("dead", action: self.daemonKilled)
         }
     }
-    
-    func removeDaemon(information:Any?) {
+
+    func daemonHome(information:Any?) {
         if let daemon = information as? Daemon {
             print("GameGrid:daemon arrived at origin")
-
-            //Remove daemon
-            self.daemons.remove(daemon)
-            daemon.destroy()
-            
             //Update lives
             self.lives -= 1
             self.hud.updateLives(self.lives)
-            
-            //Flash the origin black when we lose a life
-            let originTile = tiles[Coordinate(0.0, 0.0)]!.0
-            HelperFunctions.animateTransition({
-                originTile.geometry?.firstMaterial?.diffuse.contents = UIColor.blackColor()
-                }, animationDuration: 0.3)
-            
-            let timer = NSTimer(timeInterval: 0.3, target: self, selector: #selector(GameGrid.restoreOriginColour), userInfo: nil, repeats: false)
-            NSRunLoop.mainRunLoop().addTimer(timer, forMode: NSRunLoopCommonModes)
+            self.removeDaemon(daemon)
         }
+    }
+
+    func daemonKilled(information:Any?) {
+        if let daemon = information as? Daemon {
+            print("GameGrid:daemon killed")
+            self.removeDaemon(daemon)
+        }
+    }
+    
+    func removeDaemon(daemon: Daemon) {
+        //Remove daemon
+        self.daemons.remove(daemon)
+        daemon.destroy()
+        
+        //Flash the origin black when we lose a life
+        let originTile = tiles[Coordinate(0.0, 0.0)]!.0
+        HelperFunctions.animateTransition({
+            originTile.geometry?.firstMaterial?.diffuse.contents = UIColor.blackColor()
+            }, animationDuration: 0.3)
+        
+        let timer = NSTimer(timeInterval: 0.3, target: self, selector: #selector(GameGrid.restoreOriginColour), userInfo: nil, repeats: false)
+        NSRunLoop.mainRunLoop().addTimer(timer, forMode: NSRunLoopCommonModes)
     }
     
     dynamic func restoreOriginColour() {
@@ -231,7 +246,7 @@ class GameGrid {
         let coordinate = Coordinate(position.x, position.z)
         let newNode = GKGraphNode2D(point: vector2(position.x, position.z))
         
-        if abs(position.x) < self.epsilon && abs(position.z) < self.epsilon {
+        if coordinate == Coordinate(0.0, 0.0) {
             self.originNode = newNode
         }
         
@@ -298,13 +313,36 @@ class GameGrid {
     
     func createTower(information:Any?) {
         let coordinate = Coordinate(self.cube.position.x, self.cube.position.z)
-        if self.towers[coordinate] != nil {
-            print("tower already present")
+
+        if self.towers[coordinate] != nil || coordinate == Coordinate(0.0, 0.0) {
+            print("GameGrid:tower already present")
             return
         }
         
-        let tower = Tower(parent: self.floor, position: self.cube.position)
-        self.towers[coordinate] = tower
-        print("GameGrid:created tower")
+        if (self.score >= Tower.getCost()) {
+            let tower = Tower(parent: self.floor, position: self.cube.position)
+            self.towers[coordinate] = tower
+            tower.events.listenTo("fire", action: self.addMissile)
+            print("GameGrid:created tower")
+            self.score -= tower.cost
+            self.hud.updateScoreCard(Int(self.score))
+        } else {
+            print("GameGrid:can't afford tower")
+        }
     }
+    
+    func addMissile(information:Any?) {
+        if let missile = information as? Missile {
+            missile.events.listenTo("hit", action: self.removeMissile)
+            self.missiles.insert(missile)
+        }
+    }
+    
+    func removeMissile(information:Any?) {
+        if let missile = information as? Missile {
+            self.missiles.remove(missile)
+            missile.destroy()
+        }
+    }
+    
 }

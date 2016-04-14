@@ -20,8 +20,11 @@ class Daemon: SCNNode {
     var destinationNode: GKGraphNode2D?
     var route: [GKGraphNode2D]?
     var lastUpdateTime: NSTimeInterval?
-    var isMoving = false
     var parent: SCNNode?
+
+    var isMoving = false
+    var health = 5
+    var routeLength: Float = Float.infinity
     
     init(parent: SCNNode, position: SCNVector3, initialNode: GKGraphNode2D, destinationNode: GKGraphNode2D) {
         self.nextNode = initialNode
@@ -58,10 +61,11 @@ class Daemon: SCNNode {
         if (distanceFromNextNode < movement) {
             //Arrived at next node
             if (self.route!.count == 0) {
-                self.arrivedAtOrigin()
+                self.home()
             } else {
                 self.position = SCNVector3(CGFloat(self.nextNode!.position.x), self.radius, CGFloat(self.nextNode!.position.y))
                 self.nextNode = self.route!.removeAtIndex(0)
+                self.calculateRouteLength()
             }
         } else {
             let angle = atan(xDiff/zDiff)
@@ -74,19 +78,36 @@ class Daemon: SCNNode {
     }
     
     func updateRoute(graph: GKGraph) {
-        //print("Daemon:position = x: \(self.position.x), z: \(self.position.z)")
         self.route = graph.findPathFromNode(self.nextNode!, toNode: self.destinationNode!) as? [GKGraphNode2D]
         //print("Daemon:route - \(self.route)")
-        
+
         if (self.route!.count > 1) {
             self.route!.removeAtIndex(0)
             self.isMoving = true
         }
     }
     
-    func arrivedAtOrigin() {
+    func calculateRouteLength() {
+        self.routeLength = 0.0
+        var previousNode = self.nextNode!
+        for node in self.route! {
+            let xDiff = node.position.x - previousNode.position.x
+            let yDiff = node.position.y - previousNode.position.y
+            self.routeLength = self.routeLength + sqrtf(pow(xDiff, 2.0) + pow(yDiff, 2.0))
+            previousNode = node
+        }
+    }
+    
+    func home() {
         print("Daemon:arrived at origin")
-        self.events.trigger("arrivedAtOrigin", information: self)
+        self.events.trigger("home", information: self)
+    }
+    
+    func hit(damage: Int) {
+        self.health -= damage
+        if self.health <= 0 {
+            self.events.trigger("dead", information: self)            
+        }
     }
     
     func destroy() {
