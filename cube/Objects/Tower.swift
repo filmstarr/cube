@@ -13,7 +13,7 @@ import GameplayKit
 class Tower: SCNNode {
     
     let events = EventManager()
-    let range = 10
+    let range: Float = 5.0
     let frequency = 2.0
     let cost = Tower.getCost()
     
@@ -53,10 +53,19 @@ class Tower: SCNNode {
             return
         }
         
-        if (time - self.lastFireTime! > 1 / self.frequency && daemons.count > 0) {
-            //TODO: Apply range and select most appropriate daemon
+        if (time - self.lastFireTime! > 1.0 / self.frequency && daemons.count > 0) {
             if daemons.count > 0 {
-                self.fire(daemons.first!)
+                for daemon in daemons {
+                    if daemon.pendingHealth > 0 {
+                        let xDiff = daemon.position.x - self.position.x
+                        let zDiff = daemon.position.z - self.position.z
+                        let separation = sqrt(pow(xDiff, 2.0) + pow(zDiff, 2.0))
+                        if separation < self.range {
+                            self.fire(daemon)
+                            break
+                        }
+                    }
+                }
             }
             self.lastFireTime = time
         }
@@ -64,6 +73,7 @@ class Tower: SCNNode {
     
     func fire(daemon: Daemon) {
         print("SpawnPoint:fire at \(daemon)")
+        daemon.pendingHealth -= 1
         let missile = Missile(parent: self.parent!, position: self.position, target: daemon, damage: self.level)
         self.events.trigger("fire", information: missile)
     }

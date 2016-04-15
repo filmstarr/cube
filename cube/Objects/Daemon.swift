@@ -24,6 +24,7 @@ class Daemon: SCNNode {
 
     var isMoving = false
     var health = 5
+    var pendingHealth = 5
     var routeLength: Float = Float.infinity
     
     init(parent: SCNNode, position: SCNVector3, initialNode: GKGraphNode2D, destinationNode: GKGraphNode2D) {
