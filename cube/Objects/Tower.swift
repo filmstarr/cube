@@ -73,7 +73,7 @@ class Tower: SCNNode {
     
     func fire(daemon: Daemon) {
         print("SpawnPoint:fire at \(daemon)")
-        daemon.pendingHealth -= 1
+        daemon.pendingHealth! -= 1
         let missile = Missile(parent: self.parent!, position: self.position, target: daemon, damage: self.level)
         self.events.trigger("fire", information: missile)
     }

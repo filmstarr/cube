@@ -15,6 +15,7 @@ class Daemon: SCNNode {
     let events = EventManager()
     let radius = CGFloat(0.20)
     let speed = 1.0
+    let originalHealth = 5
     
     var nextNode: GKGraphNode2D?
     var destinationNode: GKGraphNode2D?
@@ -23,11 +24,14 @@ class Daemon: SCNNode {
     var parent: SCNNode?
 
     var isMoving = false
-    var health = 5
-    var pendingHealth = 5
+    var health: Int?
+    var pendingHealth: Int?
     var routeLength: Float = Float.infinity
     
     init(parent: SCNNode, position: SCNVector3, initialNode: GKGraphNode2D, destinationNode: GKGraphNode2D) {
+        self.health = self.originalHealth
+        self.pendingHealth = self.originalHealth
+        
         self.nextNode = initialNode
         self.destinationNode = destinationNode
         self.parent = parent
@@ -105,7 +109,7 @@ class Daemon: SCNNode {
     }
     
     func hit(damage: Int) {
-        self.health -= damage
+        self.health! -= damage
         if self.health <= 0 {
             self.events.trigger("dead", information: self)            
         }

@@ -210,6 +210,15 @@ class GameGrid {
             self.lives -= 1
             self.hud.updateLives(self.lives)
             self.removeDaemon(daemon)
+            
+            //Flash the origin black when we lose a life
+            let originTile = tiles[Coordinate(0.0, 0.0)]!.0
+            HelperFunctions.animateTransition({
+                originTile.geometry?.firstMaterial?.diffuse.contents = UIColor.blackColor()
+                }, animationDuration: 0.3)
+            
+            let timer = NSTimer(timeInterval: 0.3, target: self, selector: #selector(GameGrid.restoreOriginColour), userInfo: nil, repeats: false)
+            NSRunLoop.mainRunLoop().addTimer(timer, forMode: NSRunLoopCommonModes)
         }
     }
 
@@ -217,6 +226,8 @@ class GameGrid {
         if let daemon = information as? Daemon {
             print("GameGrid:daemon killed")
             self.removeDaemon(daemon)
+            self.score += Float(daemon.originalHealth)
+            self.hud.updateScoreCard(Int(self.score))
         }
     }
     
@@ -224,15 +235,6 @@ class GameGrid {
         //Remove daemon
         self.daemons.remove(daemon)
         daemon.destroy()
-        
-        //Flash the origin black when we lose a life
-        let originTile = tiles[Coordinate(0.0, 0.0)]!.0
-        HelperFunctions.animateTransition({
-            originTile.geometry?.firstMaterial?.diffuse.contents = UIColor.blackColor()
-            }, animationDuration: 0.3)
-        
-        let timer = NSTimer(timeInterval: 0.3, target: self, selector: #selector(GameGrid.restoreOriginColour), userInfo: nil, repeats: false)
-        NSRunLoop.mainRunLoop().addTimer(timer, forMode: NSRunLoopCommonModes)
     }
     
     dynamic func restoreOriginColour() {
@@ -304,7 +306,7 @@ class GameGrid {
         
         newNode.addConnectionsToNodes(nodesToConnect, bidirectional: true)
 
-        for daemon in daemons {
+        for daemon in self.daemons {
             daemon.updateRoute(self.graph)
         }
         
@@ -312,6 +314,7 @@ class GameGrid {
     }
     
     func createTower(information:Any?) {
+        let position = self.cube.position
         let coordinate = Coordinate(self.cube.position.x, self.cube.position.z)
 
         if self.towers[coordinate] != nil || coordinate == Coordinate(0.0, 0.0) {
@@ -320,12 +323,64 @@ class GameGrid {
         }
         
         if (self.score >= Tower.getCost()) {
+            //Add tower
             let tower = Tower(parent: self.floor, position: self.cube.position)
             self.towers[coordinate] = tower
             tower.events.listenTo("fire", action: self.addMissile)
             print("GameGrid:created tower")
             self.score -= tower.cost
             self.hud.updateScoreCard(Int(self.score))
+            
+            //Remove node from graph
+            if self.nodes.keys.contains(coordinate) {
+                //ToDo check if we can remove node
+                self.graph.removeNodes([self.nodes[coordinate]!])
+                
+                //Remove diagonal connections
+                var nodeOneZero: GKGraphNode2D?
+                var nodeMinusOneZero: GKGraphNode2D?
+                var nodeZeroOne: GKGraphNode2D?
+                var nodeZeroMinusOne: GKGraphNode2D?
+                
+                if let node = nodes[Coordinate(position.x + 1, position.z)] {
+                    nodeOneZero = node
+                }
+                if let node = nodes[Coordinate(position.x - 1, position.z)] {
+                    nodeMinusOneZero = node
+                }
+                if let node = nodes[Coordinate(position.x, position.z + 1)] {
+                    nodeZeroOne = node
+                }
+                if let node = nodes[Coordinate(position.x, position.z - 1)] {
+                    nodeZeroMinusOne = node
+                }
+                
+                if [Coordinate(position.x + 1, position.z + 1)] != nil {
+                    if let n = nodeOneZero, m = nodeZeroOne {
+                        n.removeConnectionsToNodes([m], bidirectional: true)
+                    }
+                }
+                if [Coordinate(position.x + 1, position.z - 1)] != nil {
+                    if let n = nodeOneZero, m = nodeZeroMinusOne {
+                        n.removeConnectionsToNodes([m], bidirectional: true)
+                    }
+                }
+                if [Coordinate(position.x - 1, position.z + 1)] != nil {
+                    if let n = nodeMinusOneZero, m = nodeZeroOne {
+                        n.removeConnectionsToNodes([m], bidirectional: true)
+                    }
+                }
+                if [Coordinate(position.x - 1, position.z - 1)] != nil {
+                    if let n = nodeMinusOneZero, m = nodeZeroMinusOne {
+                        n.removeConnectionsToNodes([m], bidirectional: true)
+                    }
+                }
+                
+                for daemon in self.daemons {
+                    daemon.updateRoute(self.graph)
+                }
+            }
+            
         } else {
             print("GameGrid:can't afford tower")
         }
