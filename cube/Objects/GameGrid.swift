@@ -138,7 +138,7 @@ class GameGrid {
         }
         
         self.updateBounds(position)
-        let newNode = self.updateGraph(position)
+        let newNode = self.addNodeToGraph(Coordinate(position.x, position.z))
 
         if isDying {
             let spawnPoint = SpawnPoint(parent: self.floor, position: SCNVector3(x: position.x, y: epsilon, z: position.z), size: self.cubeSize, spawnPointNode: newNode, originNode: self.originNode!)
@@ -244,9 +244,8 @@ class GameGrid {
             }, animationDuration: 0.5)
     }
     
-    func updateGraph(position: SCNVector3) -> GKGraphNode2D {
-        let coordinate = Coordinate(position.x, position.z)
-        let newNode = GKGraphNode2D(point: vector2(position.x, position.z))
+    func addNodeToGraph(coordinate: Coordinate) -> GKGraphNode2D {
+        let newNode = GKGraphNode2D(point: vector2(Float(coordinate.x), Float(coordinate.z)))
         
         if coordinate == Coordinate(0.0, 0.0) {
             self.originNode = newNode
@@ -261,43 +260,43 @@ class GameGrid {
         var nodeZeroOne: GKGraphNode2D?
         var nodeZeroMinusOne: GKGraphNode2D?
         
-        if let node = nodes[Coordinate(position.x + 1, position.z)] {
+        if let node = nodes[Coordinate(coordinate.x + 1, coordinate.z)] {
             nodesToConnect.append(node)
             nodeOneZero = node
         }
-        if let node = nodes[Coordinate(position.x - 1, position.z)] {
+        if let node = nodes[Coordinate(coordinate.x - 1, coordinate.z)] {
             nodesToConnect.append(node)
             nodeMinusOneZero = node
         }
-        if let node = nodes[Coordinate(position.x, position.z + 1)] {
+        if let node = nodes[Coordinate(coordinate.x, coordinate.z + 1)] {
             nodesToConnect.append(node)
             nodeZeroOne = node
         }
-        if let node = nodes[Coordinate(position.x, position.z - 1)] {
+        if let node = nodes[Coordinate(coordinate.x, coordinate.z - 1)] {
             nodesToConnect.append(node)
             nodeZeroMinusOne = node
         }
 
         //Diagonal nodes
-        if let node = nodes[Coordinate(position.x + 1, position.z + 1)] {
+        if let node = nodes[Coordinate(coordinate.x + 1, coordinate.z + 1)] {
             if let n = nodeOneZero, m = nodeZeroOne {
                 nodesToConnect.append(node)
                 n.addConnectionsToNodes([m], bidirectional: true)
             }
         }
-        if let node = nodes[Coordinate(position.x + 1, position.z - 1)] {
+        if let node = nodes[Coordinate(coordinate.x + 1, coordinate.z - 1)] {
             if let n = nodeOneZero, m = nodeZeroMinusOne {
                 nodesToConnect.append(node)
                 n.addConnectionsToNodes([m], bidirectional: true)
             }
         }
-        if let node = nodes[Coordinate(position.x - 1, position.z + 1)] {
+        if let node = nodes[Coordinate(coordinate.x - 1, coordinate.z + 1)] {
             if let n = nodeMinusOneZero, m = nodeZeroOne {
                 nodesToConnect.append(node)
                 n.addConnectionsToNodes([m], bidirectional: true)
             }
         }
-        if let node = nodes[Coordinate(position.x - 1, position.z - 1)] {
+        if let node = nodes[Coordinate(coordinate.x - 1, coordinate.z - 1)] {
             if let n = nodeMinusOneZero, m = nodeZeroMinusOne {
                 nodesToConnect.append(node)
                 n.addConnectionsToNodes([m], bidirectional: true)
@@ -313,8 +312,57 @@ class GameGrid {
         return newNode
     }
     
+    func removeNodeFromGraph(coordinate: Coordinate) {
+        if self.nodes.keys.contains(coordinate) {
+            self.graph.removeNodes([self.nodes[coordinate]!])
+            
+            //Remove diagonal connections
+            var nodeOneZero: GKGraphNode2D?
+            var nodeMinusOneZero: GKGraphNode2D?
+            var nodeZeroOne: GKGraphNode2D?
+            var nodeZeroMinusOne: GKGraphNode2D?
+            
+            if let node = nodes[Coordinate(coordinate.x + 1, coordinate.z)] {
+                nodeOneZero = node
+            }
+            if let node = nodes[Coordinate(coordinate.x - 1, coordinate.z)] {
+                nodeMinusOneZero = node
+            }
+            if let node = nodes[Coordinate(coordinate.x, coordinate.z + 1)] {
+                nodeZeroOne = node
+            }
+            if let node = nodes[Coordinate(coordinate.x, coordinate.z - 1)] {
+                nodeZeroMinusOne = node
+            }
+            
+            if [Coordinate(coordinate.x + 1, coordinate.z + 1)] != nil {
+                if let n = nodeOneZero, m = nodeZeroOne {
+                    n.removeConnectionsToNodes([m], bidirectional: true)
+                }
+            }
+            if [Coordinate(coordinate.x + 1, coordinate.z - 1)] != nil {
+                if let n = nodeOneZero, m = nodeZeroMinusOne {
+                    n.removeConnectionsToNodes([m], bidirectional: true)
+                }
+            }
+            if [Coordinate(coordinate.x - 1, coordinate.z + 1)] != nil {
+                if let n = nodeMinusOneZero, m = nodeZeroOne {
+                    n.removeConnectionsToNodes([m], bidirectional: true)
+                }
+            }
+            if [Coordinate(coordinate.x - 1, coordinate.z - 1)] != nil {
+                if let n = nodeMinusOneZero, m = nodeZeroMinusOne {
+                    n.removeConnectionsToNodes([m], bidirectional: true)
+                }
+            }
+            
+            for daemon in self.daemons {
+                daemon.updateRoute(self.graph)
+            }
+        }
+    }
+    
     func createTower(information:Any?) {
-        let position = self.cube.position
         let coordinate = Coordinate(self.cube.position.x, self.cube.position.z)
 
         if self.towers[coordinate] != nil || coordinate == Coordinate(0.0, 0.0) {
@@ -323,6 +371,45 @@ class GameGrid {
         }
         
         if (self.score >= Tower.getCost()) {
+            //Check tower doesn't block path
+            self.removeNodeFromGraph(coordinate)
+            
+            if let node = nodes[Coordinate(coordinate.x + 1, coordinate.z)] {
+                let route = self.graph.findPathFromNode(node, toNode: self.originNode!) as? [GKGraphNode2D]
+                if route!.count == 0 {
+                    print("GameGrid:failed to route from x+1, route: \(route)")
+                    self.addNodeToGraph(coordinate)
+                    return
+                }
+            }
+            
+            if let node = nodes[Coordinate(coordinate.x - 1, coordinate.z)] {
+                let route = self.graph.findPathFromNode(node, toNode: self.originNode!) as? [GKGraphNode2D]
+                if route!.count == 0 {
+                    print("GameGrid:failed to route from x-1, route: \(route)")
+                    self.addNodeToGraph(coordinate)
+                    return
+                }
+            }
+            
+            if let node = nodes[Coordinate(coordinate.x, coordinate.z + 1)] {
+                let route = self.graph.findPathFromNode(node, toNode: self.originNode!) as? [GKGraphNode2D]
+                if route!.count == 0 {
+                    print("GameGrid:failed to route from z+1, route: \(route)")
+                    self.addNodeToGraph(coordinate)
+                    return
+                }
+            }
+
+            if let node = nodes[Coordinate(coordinate.x, coordinate.z - 1)] {
+                let route = self.graph.findPathFromNode(node, toNode: self.originNode!) as? [GKGraphNode2D]
+                if route!.count == 0 {
+                    print("GameGrid:failed to route from z-1, route: \(route)")
+                    self.addNodeToGraph(coordinate)
+                    return
+                }
+            }
+            
             //Add tower
             let tower = Tower(parent: self.floor, position: self.cube.position)
             self.towers[coordinate] = tower
@@ -330,56 +417,6 @@ class GameGrid {
             print("GameGrid:created tower")
             self.score -= tower.cost
             self.hud.updateScoreCard(Int(self.score))
-            
-            //Remove node from graph
-            if self.nodes.keys.contains(coordinate) {
-                //ToDo check if we can remove node
-                self.graph.removeNodes([self.nodes[coordinate]!])
-                
-                //Remove diagonal connections
-                var nodeOneZero: GKGraphNode2D?
-                var nodeMinusOneZero: GKGraphNode2D?
-                var nodeZeroOne: GKGraphNode2D?
-                var nodeZeroMinusOne: GKGraphNode2D?
-                
-                if let node = nodes[Coordinate(position.x + 1, position.z)] {
-                    nodeOneZero = node
-                }
-                if let node = nodes[Coordinate(position.x - 1, position.z)] {
-                    nodeMinusOneZero = node
-                }
-                if let node = nodes[Coordinate(position.x, position.z + 1)] {
-                    nodeZeroOne = node
-                }
-                if let node = nodes[Coordinate(position.x, position.z - 1)] {
-                    nodeZeroMinusOne = node
-                }
-                
-                if [Coordinate(position.x + 1, position.z + 1)] != nil {
-                    if let n = nodeOneZero, m = nodeZeroOne {
-                        n.removeConnectionsToNodes([m], bidirectional: true)
-                    }
-                }
-                if [Coordinate(position.x + 1, position.z - 1)] != nil {
-                    if let n = nodeOneZero, m = nodeZeroMinusOne {
-                        n.removeConnectionsToNodes([m], bidirectional: true)
-                    }
-                }
-                if [Coordinate(position.x - 1, position.z + 1)] != nil {
-                    if let n = nodeMinusOneZero, m = nodeZeroOne {
-                        n.removeConnectionsToNodes([m], bidirectional: true)
-                    }
-                }
-                if [Coordinate(position.x - 1, position.z - 1)] != nil {
-                    if let n = nodeMinusOneZero, m = nodeZeroMinusOne {
-                        n.removeConnectionsToNodes([m], bidirectional: true)
-                    }
-                }
-                
-                for daemon in self.daemons {
-                    daemon.updateRoute(self.graph)
-                }
-            }
             
         } else {
             print("GameGrid:can't afford tower")

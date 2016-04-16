@@ -84,7 +84,6 @@ class Daemon: SCNNode {
     
     func updateRoute(graph: GKGraph) {
         self.route = graph.findPathFromNode(self.nextNode!, toNode: self.destinationNode!) as? [GKGraphNode2D]
-        //print("Daemon:route - \(self.route)")
 
         if (self.route!.count > 1) {
             self.route!.removeAtIndex(0)
